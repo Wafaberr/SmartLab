@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     
     # local app
     
-    'users'
+    'auth'
     'inventory'
     'supliers'
     'notifications'
