@@ -83,7 +83,7 @@ class SignupView(APIView):
 class PasswordResetRequestView(views.APIView):
     """
     Vue pour demander la réinitialisation du mot de passe
-    POST: /api/password-reset/request/
+    POST: /auth/forgot-password/
     Body: {"email": "user@example.com"}
     """
     permission_classes = [AllowAny]
@@ -166,7 +166,7 @@ class PasswordResetRequestView(views.APIView):
 class PasswordResetConfirmView(views.APIView):
     """
     Vue pour confirmer la réinitialisation du mot de passe
-    POST: /api/password-reset/confirm/
+    POST: /auth/reset-password/
     Body: {
         "token": "uuid-token",
         "new_password": "newpass123",
@@ -239,7 +239,7 @@ class PasswordResetConfirmView(views.APIView):
 class ValidateTokenView(views.APIView):
     """
     Vue pour valider un token de réinitialisation
-    GET: /api/password-reset/validate/<uuid:token>/
+    GET: /auth/reset-password/validate/<uuid:token>/
     """
     permission_classes = [AllowAny]
     
@@ -273,7 +273,7 @@ class ValidateTokenView(views.APIView):
 class PasswordChangeView(views.APIView):
     """
     Vue pour changer le mot de passe (utilisateur authentifié)
-    POST: /api/password-change/
+    POST: /auth/change-password/
     Headers: Authorization: Bearer <token>
     Body: {
         "old_password": "oldpass",
@@ -339,8 +339,8 @@ class PasswordChangeView(views.APIView):
 class UserProfileView(generics.RetrieveUpdateAPIView):
     """
     Vue pour récupérer et mettre à jour le profil utilisateur
-    GET: /api/user/profile/
-    PUT/PATCH: /api/user/profile/
+    GET: /auth/profile/
+    PUT/PATCH: /auth/profile/
     """
     permission_classes = [IsAuthenticated]
     serializer_class = auth_serializers.UserSerializer

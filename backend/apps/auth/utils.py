@@ -1,9 +1,7 @@
 # accounts/utils.py
 import re
 
-from django.core.mail import send_mail, EmailMultiAlternatives
-from django.template.loader import render_to_string
-from django.utils.html import strip_tags
+from django.core.mail import EmailMessage
 from django.conf import settings
 from rest_framework.views import exception_handler
 import logging
@@ -45,52 +43,45 @@ def custom_exception_handler(exc, context):
 
 def send_password_reset_email(user, token_obj, request=None):
     """
-    Envoie un email de réinitialisation de mot de passe avec template HTML
+    Envoie un email texte de réinitialisation de mot de passe via SMTP.
     """
     try:
+        if not settings.EMAIL_HOST_USER or not settings.EMAIL_HOST_PASSWORD:
+            raise RuntimeError(
+                'EMAIL_HOST_USER et EMAIL_HOST_PASSWORD doivent être configurés.'
+            )
+
         # Construction du lien de réinitialisation
         reset_link = f"{settings.FRONTEND_URL}/reset-password/{token_obj.token}/"
         
-        # Contexte pour le template
-        context = {
-            'user': user,
-            'reset_link': reset_link,
-            'token': str(token_obj.token),
-            'expires_in': '1 heure',
-            'site_name': 'Password Reset App',
-            'support_email': settings.DEFAULT_FROM_EMAIL,
-            'year': '2024',
-        }
-        
-        # Rendu du template HTML
-        html_message = render_to_string(
-            'emails/reset_password_email.html',
-            context
-        )
-        plain_message = strip_tags(html_message)
-        
-        # Envoi de l'email avec EmailMultiAlternatives
         subject = 'Réinitialisation de votre mot de passe'
-        from_email = settings.DEFAULT_FROM_EMAIL
         to_email = user.email
-        
-        email = EmailMultiAlternatives(
+        message = (
+            f"Bonjour {user.get_short_name() or user.email},\n\n"
+            "Vous avez demandé la réinitialisation de votre mot de passe SmartLab.\n\n"
+            f"Ouvrez ce lien pour continuer : {reset_link}\n\n"
+            "Ce lien est valable pendant 1 heure.\n"
+            "Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.\n"
+        )
+
+        email = EmailMessage(
             subject=subject,
-            body=plain_message,
-            from_email=from_email,
+            body=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
             to=[to_email],
             reply_to=[settings.DEFAULT_FROM_EMAIL],
         )
-        email.attach_alternative(html_message, "text/html")
-        
-        # Envoyer l'email
-        email.send(fail_silently=False)
+
+        sent = email.send(fail_silently=False)
+        if sent != 1:
+            logger.error("Le backend email n'a envoyé aucun message à %s", to_email)
+            return False
         
         logger.info(f"Email de réinitialisation envoyé à {user.email}")
         return True
         
     except Exception as e:
-        logger.error(f"Erreur lors de l'envoi de l'email: {str(e)}")
+        logger.exception("Erreur lors de l'envoi de l'email: %s", e)
         return False
 
 def validate_password_strength(password):

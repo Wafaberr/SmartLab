@@ -74,9 +74,30 @@ class PasswordResetToken(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
     is_used = models.BooleanField(default=False)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True, default='')
     
     class Meta:
         ordering = ['-created_at']
     
     def __str__(self):
         return f"Password reset token for {self.user.email}"
+
+    @classmethod
+    def clean_expired_tokens(cls):
+        """Delete expired reset tokens and return the number removed."""
+        deleted, _ = cls.objects.filter(expires_at__lt=timezone.now()).delete()
+        return deleted
+
+    @classmethod
+    def get_valid_token(cls, token):
+        """Return an unused, non-expired token, or None when it is invalid."""
+        return cls.objects.filter(
+            token=token,
+            is_used=False,
+            expires_at__gt=timezone.now(),
+        ).select_related('user').first()
+
+    def mark_as_used(self):
+        self.is_used = True
+        self.save(update_fields=['is_used'])

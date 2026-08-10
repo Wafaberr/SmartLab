@@ -3,5 +3,9 @@ class Endpoints {
   static final String login = 'auth/login/';
   static final String signup = 'auth/signup/';
   static final String profile = 'auth/profile/';
+  static const String forgotPassword = 'auth/forgot-password/';
+  static const String resetPassword = 'auth/reset-password/';
+  static const String changePassword = 'auth/change-password';
+  static const String home = '/home';
   
 }
