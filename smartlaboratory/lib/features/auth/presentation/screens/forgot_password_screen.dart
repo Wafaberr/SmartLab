@@ -39,9 +39,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         listener: (context, state) {
           if (state is PasswordResetSuccess) {
             SnackbarWidget.showSuccess(context, state.message);
-            Future.delayed(const Duration(seconds: 2), () {
-              context.go('/login');
-            });
           } else if (state is PasswordResetFailure) {
             SnackbarWidget.showError(context, state.error);
           }
@@ -76,18 +73,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 // Title
                 const Text(
                   'Réinitialisation du mot de passe',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Entrez votre adresse email pour recevoir un lien de réinitialisation',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 32),
                 // Form

@@ -14,8 +14,6 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  static const _duration = Duration(seconds: 5);
-
   double _scale = 0.3;
   Timer? _timer;
 
@@ -32,6 +30,10 @@ class _SplashScreenState extends State<SplashScreen> {
   void initialize() async {
     await widget.onInit();
     if (!mounted) return;
+
+    final currentPath = GoRouterState.of(context).uri.path;
+    if (currentPath.startsWith('/reset-password')) return;
+
     final isAuth = context.read<AuthCubit>().state is Authentificated;
     context.go(isAuth ? "/home" : "/login");
   }

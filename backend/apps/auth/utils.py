@@ -1,8 +1,10 @@
 # accounts/utils.py
 import re
 
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
+from django.template.loader import render_to_string
+from django.urls import reverse
 from rest_framework.views import exception_handler
 import logging
 
@@ -52,7 +54,19 @@ def send_password_reset_email(user, token_obj, request=None):
             )
 
         # Construction du lien de réinitialisation
-        reset_link = f"{settings.FRONTEND_URL}/reset-password/{token_obj.token}/"
+        if request is not None:
+            reset_link = request.build_absolute_uri(
+                reverse('password_reset_link', kwargs={'token': token_obj.token})
+            )
+        else:
+            reset_link = (
+                f"{settings.RESET_PASSWORD_URL.rstrip('/')}/"
+                f"{token_obj.token}/"
+            )
+        mobile_reset_link = (
+            f"{settings.MOBILE_RESET_PASSWORD_URL.rstrip('/')}/"
+            f"{token_obj.token}"
+        )
         
         subject = 'Réinitialisation de votre mot de passe'
         to_email = user.email
@@ -60,17 +74,30 @@ def send_password_reset_email(user, token_obj, request=None):
             f"Bonjour {user.get_short_name() or user.email},\n\n"
             "Vous avez demandé la réinitialisation de votre mot de passe SmartLab.\n\n"
             f"Ouvrez ce lien pour continuer : {reset_link}\n\n"
+            f"Lien mobile : {mobile_reset_link}\n\n"
             "Ce lien est valable pendant 1 heure.\n"
             "Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.\n"
         )
 
-        email = EmailMessage(
+        html_message = render_to_string(
+            'emails/reset_password_email.html',
+            {
+                'user': user,
+                'reset_link': reset_link,
+                'mobile_reset_link': mobile_reset_link,
+                'expires_in': '1 heure',
+                'support_email': settings.DEFAULT_FROM_EMAIL,
+            },
+        )
+
+        email = EmailMultiAlternatives(
             subject=subject,
             body=message,
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=[to_email],
             reply_to=[settings.DEFAULT_FROM_EMAIL],
         )
+        email.attach_alternative(html_message, 'text/html')
 
         sent = email.send(fail_silently=False)
         if sent != 1:

@@ -9,7 +9,6 @@ import 'package:smartlaboratory/features/auth/presentation/widgets/custom_text_f
 import 'package:smartlaboratory/features/auth/presentation/widgets/loading_widget.dart';
 import 'package:smartlaboratory/features/auth/presentation/widgets/snackbar_widget.dart';
 
-
 class ResetPasswordScreen extends StatefulWidget {
   final String token;
 
@@ -57,7 +56,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           if (state is TokenInvalid) {
             SnackbarWidget.showError(context, state.error);
             Future.delayed(const Duration(seconds: 2), () {
-              context.go('/forgotPassword');
+              context.go('/reset_pass');
             });
           } else if (state is PasswordResetSuccess) {
             SnackbarWidget.showSuccess(context, state.message);
@@ -78,19 +77,20 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.red.shade300,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'Token invalide ou expiré',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey.shade700,
-                    ),
+                    style: TextStyle(fontSize: 18, color: Colors.grey.shade700),
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: () {
-                      context.go('/forgotPassword');
+                      context.go('/reset_pass');
                     },
                     child: const Text('Demander un nouveau lien'),
                   ),
@@ -124,10 +124,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 // Title
                 const Text(
                   'Créer un nouveau mot de passe',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 32),
                 // Form
@@ -148,10 +145,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         label: 'Confirmer le mot de passe',
                         hintText: 'Confirmez votre nouveau mot de passe',
                         controller: _confirmPasswordController,
-                        validator: (value) => Validators.validateConfirmPassword(
-                          value,
-                          _passwordController.text,
-                        ),
+                        validator: (value) =>
+                            Validators.validateConfirmPassword(
+                              value,
+                              _passwordController.text,
+                            ),
                         obscureText: true,
                         prefixIcon: const Icon(Icons.lock_outline),
                       ),

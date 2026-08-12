@@ -29,7 +29,7 @@ class Validators {
     bool hasUppercase = value.contains(RegExp(r'[A-Z]'));
     bool hasLowercase = value.contains(RegExp(r'[a-z]'));
     bool hasDigit = value.contains(RegExp(r'[0-9]'));
-    bool hasSpecialChar = value.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+    bool hasSpecialChar = value.contains(RegExp(r'[!@#$%^&*(),._?":{}|<>]'));
     
     if (!hasUppercase || !hasLowercase || !hasDigit || !hasSpecialChar) {
       return 'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial';

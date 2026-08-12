@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:smartlaboratory/core/utils/validators.dart';
 import 'package:smartlaboratory/features/auth/presentation/cubit/auth_cubit.dart';
-import 'package:smartlaboratory/features/auth/presentation/widgets/login_widgets.dart';
+import 'package:smartlaboratory/features/auth/presentation/widgets/custom_text_field.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -67,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 25),
                   child: Column(
                     children: [
-                      const SizedBox(height: 50),
+                      const SizedBox(height: 150),
 
                       const Text(
                         "Welcome Back",
@@ -87,38 +88,27 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       const SizedBox(height: 40),
 
-                      buildTextField(
-                        Icons.email_outlined,
-                        "Email Address",
-                        emailController,
+                      CustomTextField(
+                        label: 'Email',
+                        validator: Validators.validateEmail,
+                        controller: emailController,
+                        hintText: 'exemple@email.com',
                         keyboardType: TextInputType.emailAddress,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Entrez votre email';
-                          }
-                          if (!RegExp(
-                            r"^[^@\s]+@[^@\s]+\.[^@\s]+$",
-                          ).hasMatch(value.trim())) {
-                            return 'Email invalide';
-                          }
-                          return null;
-                        },
+                        prefixIcon: const Icon(Icons.email_outlined),
                       ),
 
                       const SizedBox(height: 20),
 
-                      buildPasswordField(
-                        passwordController,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Entrez votre mot de passe';
-                          }
-                          if (value.trim().length < 6) {
-                            return 'Le mot de passe doit contenir au moins 6 caractères';
-                          }
-                          return null;
-                        },
+                      CustomTextField(
+                        label: 'password',
+                        controller: passwordController,
+                        validator: Validators.validatePassword,
+                        hintText: 'Entrez votre mot de passe',
+                        obscureText: true,
+                        prefixIcon: const Icon(Icons.lock_outline),
                       ),
+
+                      const SizedBox(height: 20),
 
                       const SizedBox(height: 10),
 
@@ -180,34 +170,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                           ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 30),
-
-                      Row(
-                        children: [
-                          const Expanded(child: Divider()),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text(
-                              "or",
-                              style: TextStyle(color: Colors.grey.shade700),
-                            ),
-                          ),
-                          const Expanded(child: Divider()),
-                        ],
-                      ),
-
-                      const SizedBox(height: 30),
-
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          socialButton(Icons.facebook),
-                          socialButton(Icons.g_mobiledata),
-                          socialButton(Icons.apple),
-                          socialButton(Icons.menu_book),
                         ],
                       ),
 

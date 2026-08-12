@@ -142,7 +142,15 @@ DEFAULT_FROM_EMAIL = os.getenv(
 )
 
 # Frontend URL used in password-reset links.
-FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://172.16.0.163:3000')
+RESET_PASSWORD_URL = os.getenv(
+    'RESET_PASSWORD_URL',
+    f'{FRONTEND_URL.rstrip("/")}/reset-password',
+)
+MOBILE_RESET_PASSWORD_URL = os.getenv(
+    'MOBILE_RESET_PASSWORD_URL',
+    'smartlab://reset-password',
+)
 
 # # CORS settings
 # CORS_ALLOWED_ORIGINS = [

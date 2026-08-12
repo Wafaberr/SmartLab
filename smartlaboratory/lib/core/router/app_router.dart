@@ -5,14 +5,18 @@ import 'package:go_router/go_router.dart';
 import 'package:smartlaboratory/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:smartlaboratory/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:smartlaboratory/features/auth/presentation/screens/login_screen.dart';
+import 'package:smartlaboratory/features/auth/presentation/screens/reset_password_screen.dart';
 import 'package:smartlaboratory/features/auth/presentation/screens/signup_screen.dart';
 import 'package:smartlaboratory/features/home/presentation/screens/home_screen.dart';
 import 'package:smartlaboratory/features/setting/presentation/screens/profile_screen.dart';
 import 'package:smartlaboratory/splash_screen.dart';
 
 class AppRouter {
-  static GoRouter createRoute(AuthCubit cubit) => GoRouter(
-    initialLocation: '/splash',
+  static GoRouter createRoute(
+    AuthCubit cubit, {
+    String initialLocation = '/splash',
+  }) => GoRouter(
+    initialLocation: initialLocation,
     refreshListenable: _AuthCubitListenable(cubit),
     routes: [
       GoRoute(
@@ -31,17 +35,29 @@ class AppRouter {
         path: '/reset_pass',
         builder: (context, state) => ForgotPasswordScreen(),
       ),
+      GoRoute(
+        path: '/reset-password/:token',
+        builder: (context, state) =>
+            ResetPasswordScreen(token: state.pathParameters['token']!),
+      ),
     ],
     redirect: (context, state) {
       final status = cubit.state;
       if (status is AuthLoading || status is AuthInitial) return null;
 
       final isAuthenticated = status is Authentificated;
-      List<String> authRoutes = ['/login', '/signup', '/reset_pass'];
+      final isPasswordResetRoute = state.uri.path.startsWith(
+        '/reset-password/',
+      );
+      if (isPasswordResetRoute) return null;
+
+      const authRoutes = ['/login', '/signup', '/reset_pass'];
       final isAuthRoute = authRoutes.contains(state.matchedLocation);
 
       if (!isAuthenticated && !isAuthRoute) return '/login';
-      if (isAuthenticated && isAuthRoute) return '/home';
+      if (isAuthenticated && authRoutes.contains(state.matchedLocation)) {
+        return '/home';
+      }
       return null;
     },
   );

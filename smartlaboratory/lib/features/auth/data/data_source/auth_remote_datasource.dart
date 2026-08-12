@@ -12,6 +12,7 @@ class AuthRemoteDatasource {
 
   Future<User> signup(String name, String email, String password) async {
     try {
+      // ignore: avoid_print
       print('📝 Attempting signup with: $email');
       print('🌐 Calling ${Endpoints.baseUrl}${Endpoints.signup}');
       final response = await _dio.post(

@@ -17,6 +17,9 @@ from django.contrib.auth import authenticate, update_session_auth_hash
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.conf import settings
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 
 
 from .utils import send_password_reset_email, validate_password_strength
@@ -131,10 +134,11 @@ class PasswordResetRequestView(views.APIView):
                             }
                         }, status=status.HTTP_200_OK)
                     else:
+                        token.delete()
                         return Response({
                             "success": False,
-                            "error": "Erreur lors de l'envoi de l'email. Veuillez réessayer."
-                        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                            "error": "Le service d'envoi d'email est indisponible. Veuillez réessayer plus tard."
+                        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
                         
             except User.DoesNotExist:
                 # Pour des raisons de sécurité, on renvoie le même message
@@ -162,6 +166,28 @@ class PasswordResetRequestView(views.APIView):
         else:
             ip = request.META.get('REMOTE_ADDR')
         return ip
+
+
+class MobileDeepLinkRedirect(HttpResponseRedirect):
+    allowed_schemes = ['http', 'https', 'smartlab']
+
+
+class PasswordResetLinkView(views.APIView):
+    """Redirect a clickable HTTPS email link into the mobile application."""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request, token):
+        if not PasswordResetToken.get_valid_token(token):
+            return Response(
+                {'success': False, 'error': 'Token invalide ou expiré.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        mobile_link = (
+            f"{settings.MOBILE_RESET_PASSWORD_URL.rstrip('/')}/{token}"
+        )
+        return MobileDeepLinkRedirect(mobile_link)
 
 class PasswordResetConfirmView(views.APIView):
     """

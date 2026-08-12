@@ -57,6 +57,8 @@ class UserModelTests(TestCase):
     @override_settings(
         EMAIL_HOST_USER='test@example.com',
         EMAIL_HOST_PASSWORD='test-password',
+        RESET_PASSWORD_URL='http://localhost:3000/reset-password',
+        MOBILE_RESET_PASSWORD_URL='smartlab://reset-password',
     )
     def test_password_reset_email_is_rendered_and_sent(self):
         User = get_user_model()
@@ -72,6 +74,12 @@ class UserModelTests(TestCase):
         self.assertTrue(send_password_reset_email(user, token))
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn(str(token.token), mail.outbox[0].body)
+        self.assertIn('smartlab://reset-password/', mail.outbox[0].body)
+        self.assertEqual(len(mail.outbox[0].alternatives), 1)
+        self.assertIn(
+            f'href="smartlab://reset-password/{token.token}/"',
+            mail.outbox[0].alternatives[0][0],
+        )
 
 
 class AuthApiTests(APITestCase):
@@ -88,3 +96,24 @@ class AuthApiTests(APITestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json()['user']['email'], 'signup@example.com')
+
+    def test_password_reset_link_redirects_to_mobile_app(self):
+        User = get_user_model()
+        user = User.objects.create_user(
+            email='redirect@example.com',
+            password='secret123',
+        )
+        token = PasswordResetToken.objects.create(
+            user=user,
+            expires_at=timezone.now() + timedelta(hours=1),
+        )
+
+        response = self.client.get(
+            reverse('password_reset_link', kwargs={'token': token.token}),
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response['Location'],
+            f'smartlab://reset-password/{token.token}/',
+        )
