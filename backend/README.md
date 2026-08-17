@@ -412,36 +412,6 @@ implémentés :
 - **Notifications** (`/notifications/`) : Notifications et alertes
 - **AI** (`/ai/`) : Services d'intelligence artificielle
 
-## ⚠️ Notes d'intégration
-
-### Discordance modèle Flutter / API
-
-Le modèle `ProductModel` côté Flutter contient plus de champs que l'API backend :
-
-**Champs Flutter (pas dans le backend):**
-- `reference` (vs `sku` au backend)
-- `barcode`
-- `supplier` (nécessite une app Suppliers)
-- `unit`
-- `stockQuantity`, `minimumStock`, `maximumStock` (vs StockItem séparé)
-- `purchasePrice` (vs `price` au backend)
-- `expirationDate`
-- `storageTemperature`
-- `image`
-- `isLowStock`
-
-**Solutions possibles:**
-
-1. **Option 1 (Recommandée)** : Mettre à jour le modèle backend Product pour inclure
-   les champs manquants et faire une migration de base de données.
-
-2. **Option 2** : Adapter le modèle Flutter pour utiliser les champs du backend
-   et créer des endpoints séparés pour les données complètes.
-
-3. **Option 3** : Créer un endpoint personnalisé `/inventory/products-extended/`
-   qui combine Product et StockItem avec les champs additionnels calculés.
-
-Cette discordance doit être résolue avant le déploiement en production.
 
 ## Permissions
 
