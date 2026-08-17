@@ -7,5 +7,6 @@ class Endpoints {
   static const String resetPassword = 'auth/reset-password/';
   static const String changePassword = 'auth/change-password';
   static const String home = '/home';
+  static const String products = 'inventory/products/';
   
 }

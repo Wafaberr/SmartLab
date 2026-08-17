@@ -8,7 +8,6 @@ import 'package:smartlaboratory/features/auth/presentation/screens/login_screen.
 import 'package:smartlaboratory/features/auth/presentation/screens/reset_password_screen.dart';
 import 'package:smartlaboratory/features/auth/presentation/screens/signup_screen.dart';
 import 'package:smartlaboratory/features/home/presentation/screens/home_screen.dart';
-import 'package:smartlaboratory/features/setting/presentation/screens/profile_screen.dart';
 import 'package:smartlaboratory/splash_screen.dart';
 
 class AppRouter {
@@ -30,7 +29,6 @@ class AppRouter {
       GoRoute(path: '/home', builder: (context, state) => HomeScreen()),
       GoRoute(path: '/login', builder: (context, state) => LoginScreen()),
       GoRoute(path: '/signup', builder: (context, state) => SignupScreen()),
-      GoRoute(path: '/profile', builder: (context, state) => ProfileScreen()),
       GoRoute(
         path: '/reset_pass',
         builder: (context, state) => ForgotPasswordScreen(),
@@ -61,6 +59,7 @@ class AppRouter {
       return null;
     },
   );
+ 
 }
 
 class _AuthCubitListenable extends ChangeNotifier {

@@ -12,6 +12,9 @@ import 'package:smartlaboratory/features/auth/domain/repository/auth_repository.
 import 'package:smartlaboratory/features/auth/domain/repository/password_reset_repository.dart';
 import 'package:smartlaboratory/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:smartlaboratory/features/auth/presentation/cubit_2/password_reset_cubit.dart';
+import 'package:smartlaboratory/features/products/data/repository/product_repository_impl.dart';
+import 'package:smartlaboratory/features/products/domain/repository/product_repository.dart';
+import 'package:smartlaboratory/features/products/presentation/cubit/product_cubit.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,6 +30,7 @@ Future<void> main() async {
   AuthRepository authRepository = AuthRepositoryImpl();
   PasswordResetRepository passwordResetRepository =
       PasswordResetRepositoryImpl();
+  ProductRepository productRepository = ProductRepositoryImpl();
   runApp(
     MultiBlocProvider(
       providers: [
@@ -37,6 +41,12 @@ Future<void> main() async {
           create: (context) => PasswordResetCubit(
             authRepository,
             passwordResetRepository: passwordResetRepository,
+          ),
+        ),
+        BlocProvider(
+          create: (context) => ProductCubit(
+            productRepository,
+           
           ),
         ),
       ],
