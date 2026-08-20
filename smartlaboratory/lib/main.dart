@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smartlaboratory/core/router/app_router.dart';
+import 'package:smartlaboratory/core/localization/app_locale.dart';
 
 import 'package:smartlaboratory/features/auth/data/repository/auth_repository_impl.dart';
 import 'package:smartlaboratory/features/auth/data/repository/password_reset_repository_impl.dart';
@@ -43,12 +44,7 @@ Future<void> main() async {
             passwordResetRepository: passwordResetRepository,
           ),
         ),
-        BlocProvider(
-          create: (context) => ProductCubit(
-            productRepository,
-           
-          ),
-        ),
+        BlocProvider(create: (context) => ProductCubit(productRepository)),
       ],
       child: MyApp(initialUri: initialUri),
     ),
@@ -65,6 +61,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  final _localeController = AppLocaleController();
   late final GoRouter _router;
   final AppLinks _appLinks = AppLinks();
   StreamSubscription<Uri>? _linkSubscription;
@@ -72,6 +69,8 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    _localeController.addListener(_onLocaleChanged);
+    _localeController.load();
     _router = AppRouter.createRoute(
       context.read<AuthCubit>(),
       initialLocation: _initialLocation,
@@ -136,19 +135,27 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void dispose() {
+    _localeController.removeListener(_onLocaleChanged);
+    _localeController.dispose();
     _linkSubscription?.cancel();
     _router.dispose();
     super.dispose();
   }
 
+  void _onLocaleChanged() => setState(() {});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+    return AppLocaleScope(
+      notifier: _localeController,
+      child: MaterialApp.router(
+        title: _localeController.text('appName'),
+        locale: _localeController.locale,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        ),
+        routerConfig: _router,
       ),
-      routerConfig: _router,
     );
   }
 }

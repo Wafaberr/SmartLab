@@ -65,7 +65,7 @@ def send_password_reset_email(user, token_obj, request=None):
             )
         mobile_reset_link = (
             f"{settings.MOBILE_RESET_PASSWORD_URL.rstrip('/')}/"
-            f"{token_obj.token}"
+            f"{token_obj.token}/"
         )
         
         subject = 'Réinitialisation de votre mot de passe'

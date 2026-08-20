@@ -1,15 +1,18 @@
+import 'dart:io';
+
 import 'package:smartlaboratory/features/products/data/data_source/product_datasource.dart';
 import 'package:smartlaboratory/features/products/data/models/product_model.dart';
+import 'package:smartlaboratory/features/products/data/models/stock_movement_model.dart';
 import 'package:smartlaboratory/features/products/domain/repository/product_repository.dart';
 
 class ProductRepositoryImpl implements ProductRepository {
   final ProductDatasource _productDatasource = ProductDatasource();
 
   @override
-  Future<void> createProducts({ProductModel? product}) async {
+  Future<void> createProducts({ProductModel? product,File? imageFile}) async {
     try {
       if (product == null) throw 'Product cannot be null';
-      await _productDatasource.createProduct(product);
+      await _productDatasource.createProduct(product,imageFile);
     } catch (e) {
       rethrow;
     }
@@ -51,5 +54,15 @@ class ProductRepositoryImpl implements ProductRepository {
     } catch (e) {
       rethrow;
     }
+  }
+
+  @override
+  Future<StockMovementModel> createMovement({required int productId, required String movementType, required double quantity, String reason = '', String comment = ''}) {
+    return _productDatasource.createMovement(productId: productId, movementType: movementType, quantity: quantity, reason: reason, comment: comment);
+  }
+
+  @override
+  Future<List<StockMovementModel>> getMovements(int productId) {
+    return _productDatasource.getMovements(productId);
   }
 }

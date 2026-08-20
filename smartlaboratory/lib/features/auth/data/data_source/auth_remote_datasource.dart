@@ -12,9 +12,8 @@ class AuthRemoteDatasource {
 
   Future<User> signup(String name, String email, String password) async {
     try {
-      // ignore: avoid_print
-      print('📝 Attempting signup with: $email');
-      print('🌐 Calling ${Endpoints.baseUrl}${Endpoints.signup}');
+      _logger.info('Attempting signup with: $email');
+      _logger.info('Calling ${Endpoints.baseUrl}${Endpoints.signup}');
       final response = await _dio.post(
         Endpoints.signup,
         data: {"username": name, "email": email, "password": password},
@@ -26,6 +25,10 @@ class AuthRemoteDatasource {
         await SharedPerefsService.instance.setString(
           'token',
           data["access"].toString(),
+        );
+        await SharedPerefsService.instance.setString(
+          'refresh_token',
+          data["refresh"].toString(),
         );
 
         return User.fromJson(data['user'] as Map<String, dynamic>);
@@ -45,7 +48,7 @@ class AuthRemoteDatasource {
 
   Future<User> login(String email, String password) async {
     try {
-      print("email=$email");
+      _logger.info('Attempting login with: $email');
       final response = await _dio.post(
         Endpoints.login,
         data: {"email": email, "password": password},
@@ -54,9 +57,13 @@ class AuthRemoteDatasource {
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
         // store access token returned by SimpleJWT
-        SharedPerefsService.instance.setString(
+        await SharedPerefsService.instance.setString(
           'token',
-          data["access"] ?? data["accessToken"],
+          (data["access"] ?? data["accessToken"]).toString(),
+        );
+        await SharedPerefsService.instance.setString(
+          'refresh_token',
+          data["refresh"].toString(),
         );
 
         return User.fromJson(data['user']);
@@ -73,8 +80,18 @@ class AuthRemoteDatasource {
       options: Options(headers: {"Authorization": "Bearer $token"}),
     );
 
-    // backend returns { "user": { ... } }
-    final data = response.data as Map<String, dynamic>;
-    return User.fromJson(data['user'] as Map<String, dynamic>);
+    final data = Map<String, dynamic>.from(response.data as Map);
+    final userData = data['user'] is Map
+        ? Map<String, dynamic>.from(data['user'] as Map)
+        : data;
+    return User.fromJson(userData);
+  }
+
+  Future<User> updateProfile({String? firstName, String? lastName}) async {
+    final response = await _dio.put(
+      Endpoints.profile,
+      data: {'first_name': firstName ?? '', 'last_name': lastName ?? ''},
+    );
+    return User.fromJson(Map<String, dynamic>.from(response.data as Map));
   }
 }

@@ -1,30 +1,45 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:smartlaboratory/features/auth/data/models/user_model.dart';
+import 'package:smartlaboratory/features/auth/domain/repository/auth_repository.dart';
+import 'package:smartlaboratory/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:smartlaboratory/main.dart';
 
+class _FakeAuthRepository implements AuthRepository {
+  @override
+  Future<User> login(String email, String password) =>
+      Future.error(UnimplementedError());
+
+  @override
+  Future<User> signup(String name, String email, String password) =>
+      Future.error(UnimplementedError());
+
+  @override
+  Future<void> logout() async {}
+
+  @override
+  Future<User> getProfile(String token) => Future.error(UnimplementedError());
+
+  @override
+  Future<User> updateProfile({String? firstName, String? lastName}) {
+    // TODO: implement updateProfile
+    throw UnimplementedError();
+  }
+}
+
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
-
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+  testWidgets('SmartLab app starts on the splash screen', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      BlocProvider(
+        create: (_) => AuthCubit(_FakeAuthRepository()),
+        child: const MyApp(),
+      ),
+    );
     await tester.pump();
+    await tester.pump(const Duration(seconds: 6));
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('FlavorLy'), findsOneWidget);
   });
 }

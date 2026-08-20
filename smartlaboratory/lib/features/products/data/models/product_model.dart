@@ -160,10 +160,10 @@ class ProductModel {
       'reference': reference,
 
       // Django attend l'ID de la catégorie
-      'category': category.id,
+      'category_id': category.id,
 
       // Peut être null
-      'supplier': supplier,
+      'supplier_id': supplier,
 
       'unit': unit,
 
@@ -181,8 +181,6 @@ class ProductModel {
       'expiration_date': expirationDate,
 
       'storage_temperature': storageTemperature,
-
-      'image': image,
 
       'description': description,
 

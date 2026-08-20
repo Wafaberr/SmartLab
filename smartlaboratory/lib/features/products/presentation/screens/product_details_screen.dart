@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:smartlaboratory/features/products/presentation/cubit/product_cubit.dart';
 import 'package:smartlaboratory/features/products/presentation/widget/product_image.dart';
+import 'package:smartlaboratory/features/products/data/models/stock_movement_model.dart';
+import 'package:smartlaboratory/features/products/presentation/screens/update_product_screen.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
   final int productId;
@@ -210,8 +212,19 @@ class ProductDetail extends StatelessWidget {
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () {
-                            // Modifier produit
+                          onPressed: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    UpdateProductScreen(product: product),
+                              ),
+                            );
+                            if (context.mounted) {
+                              context.read<ProductCubit>().getProduct(
+                                product.id,
+                              );
+                            }
                           },
                           icon: const Icon(Icons.edit),
                           label: const Text('Modifier'),
@@ -222,14 +235,28 @@ class ProductDetail extends StatelessWidget {
 
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () {
-                            // Ajouter stock
-                          },
+                          onPressed: () =>
+                              _showMovementDialog(context, product.id),
                           icon: const Icon(Icons.add),
                           label: const Text('Stock'),
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              StockHistoryScreen(productId: product.id),
+                        ),
+                      ),
+                      icon: const Icon(Icons.history),
+                      label: const Text('Historique des mouvements'),
+                    ),
                   ),
                 ],
               ),
@@ -288,22 +315,6 @@ class ProductDetail extends StatelessWidget {
   }
 
   // ==========================
-  // IMAGE PLACEHOLDER
-  // ==========================
-
-  Widget _imagePlaceholder() {
-    return Container(
-      width: 160,
-      height: 160,
-      decoration: BoxDecoration(
-        color: Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: const Icon(Icons.image, size: 60, color: Colors.grey),
-    );
-  }
-
-  // ==========================
   // INFO ROW
   // ==========================
 
@@ -325,6 +336,151 @@ class ProductDetail extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _showMovementDialog(BuildContext context, int productId) async {
+    await showDialog<void>(
+      context: context,
+      builder: (_) => _MovementDialog(productId: productId),
+    );
+  }
+}
+
+class _MovementDialog extends StatefulWidget {
+  final int productId;
+
+  const _MovementDialog({required this.productId});
+
+  @override
+  State<_MovementDialog> createState() => _MovementDialogState();
+}
+
+class _MovementDialogState extends State<_MovementDialog> {
+  final _quantityController = TextEditingController();
+  final _reasonController = TextEditingController();
+  String _type = 'entry';
+  bool _saving = false;
+
+  @override
+  void dispose() {
+    _quantityController.dispose();
+    _reasonController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Mouvement de stock'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DropdownButtonFormField<String>(
+            initialValue: _type,
+            items: const [
+              DropdownMenuItem(value: 'entry', child: Text('Entrée de stock')),
+              DropdownMenuItem(value: 'exit', child: Text('Sortie de stock')),
+            ],
+            onChanged: _saving
+                ? null
+                : (value) => setState(() => _type = value ?? 'entry'),
+          ),
+          TextField(
+            controller: _quantityController,
+            enabled: !_saving,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(labelText: 'Quantité'),
+          ),
+          TextField(
+            controller: _reasonController,
+            enabled: !_saving,
+            decoration: const InputDecoration(labelText: 'Motif'),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: _saving ? null : () => Navigator.pop(context),
+          child: const Text('Annuler'),
+        ),
+        FilledButton(
+          onPressed: _saving ? null : _save,
+          child: _saving
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Enregistrer'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _save() async {
+    final quantity = double.tryParse(
+      _quantityController.text.replaceAll(',', '.'),
+    );
+    if (quantity == null || quantity <= 0) return;
+
+    setState(() => _saving = true);
+    await context.read<ProductCubit>().createMovement(
+      productId: widget.productId,
+      movementType: _type,
+      quantity: quantity,
+      reason: _reasonController.text.trim(),
+    );
+    if (!mounted) return;
+    Navigator.pop(context);
+  }
+}
+
+class StockHistoryScreen extends StatelessWidget {
+  final int productId;
+
+  const StockHistoryScreen({super.key, required this.productId});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Historique des mouvements')),
+      body: FutureBuilder<List<StockMovementModel>>(
+        future: context.read<ProductCubit>().getMovements(productId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Erreur : ${snapshot.error}'));
+          }
+          final movements = snapshot.data ?? [];
+          if (movements.isEmpty) {
+            return const Center(child: Text('Aucun mouvement'));
+          }
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: movements.length,
+            separatorBuilder: (_, _) => const Divider(),
+            itemBuilder: (context, index) {
+              final movement = movements[index];
+              final isEntry = movement.movementType == 'entry';
+              return ListTile(
+                leading: Icon(
+                  isEntry ? Icons.arrow_downward : Icons.arrow_upward,
+                  color: isEntry ? Colors.green : Colors.red,
+                ),
+                title: Text(
+                  '${isEntry ? 'Entrée' : 'Sortie'} : ${movement.quantity}',
+                ),
+                subtitle: Text(
+                  '${movement.stockBefore} -> ${movement.stockAfter}${movement.reason.isEmpty ? '' : '\n${movement.reason}'}',
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }

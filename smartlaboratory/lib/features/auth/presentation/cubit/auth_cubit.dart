@@ -4,7 +4,6 @@ import 'package:smartlaboratory/core/storage/shared_perefs_service.dart';
 import 'package:smartlaboratory/features/auth/data/models/user_model.dart';
 import 'package:smartlaboratory/features/auth/domain/repository/auth_repository.dart';
 
-
 part 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
@@ -13,20 +12,28 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> checkAuth() async {
     emit(AuthLoading());
+
     try {
       final token = await SharedPerefsService.instance.getString("token");
-      // final user = await AuthRemoteDatasource.getProfile(token);
-      if (token != null) {
-        emit(
-          Authentificated(
-            user: User(id: "", name: "", email: ""),
-          ),
-        );
+
+      // Aucun token = utilisateur non connecté
+      if (token == null || token.isEmpty) {
+        emit(UnAuthentificated());
         return;
       }
-      emit(UnAuthentificated());
+
+      // Récupérer le vrai profil depuis Django
+      final user = await authRepository.getProfile(token);
+
+      emit(Authentificated(user: user));
     } catch (e) {
-      emit(AuthError(message: "error occured"));
+      // Token invalide/expiré ou problème serveur
+      await SharedPerefsService.instance.remove("token");
+
+      emit(AuthError(message: e.toString()));
+
+      // Tu peux aussi choisir :
+      // emit(UnAuthentificated());
     }
   }
 
@@ -42,10 +49,23 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> signup(String name, String email, String password) async {
     emit(AuthLoading());
-    print('🚀 AuthCubit: Starting ');
+    // print('🚀 AuthCubit: Starting ');
     try {
-      print('🚀 AuthCubit: Starting signup');
+      // print('🚀 AuthCubit: Starting signup');
       final user = await authRepository.signup(name, email, password);
+      emit(Authentificated(user: user));
+    } catch (e) {
+      emit(AuthError(message: e.toString()));
+    }
+  }
+
+  Future<void> updateProfile({String? firstName, String? lastName}) async {
+    emit(AuthLoading());
+    try {
+      final user = await authRepository.updateProfile(
+        firstName: firstName,
+        lastName: lastName,
+      );
       emit(Authentificated(user: user));
     } catch (e) {
       emit(AuthError(message: e.toString()));

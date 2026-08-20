@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.example.smartlaboratory"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 37  // CHANGE THIS: Override flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

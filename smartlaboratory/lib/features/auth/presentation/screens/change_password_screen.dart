@@ -9,7 +9,6 @@ import 'package:smartlaboratory/features/auth/presentation/widgets/custom_text_f
 import 'package:smartlaboratory/features/auth/presentation/widgets/loading_widget.dart';
 import 'package:smartlaboratory/features/auth/presentation/widgets/snackbar_widget.dart';
 
-
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
 
@@ -45,6 +44,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           if (state is PasswordResetSuccess) {
             SnackbarWidget.showSuccess(context, state.message);
             Future.delayed(const Duration(seconds: 2), () {
+              if (!context.mounted) return;
               context.go('/home');
             });
           } else if (state is PasswordResetFailure) {
@@ -83,18 +83,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   // Title
                   const Text(
                     'Changer votre mot de passe',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Assurez-vous d\'utiliser un mot de passe sécurisé',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                   ),
                   const SizedBox(height: 32),
                   // Form
@@ -127,10 +121,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         label: 'Confirmer le mot de passe',
                         hintText: 'Confirmez votre nouveau mot de passe',
                         controller: _confirmPasswordController,
-                        validator: (value) => Validators.validateConfirmPassword(
-                          value,
-                          _newPasswordController.text,
-                        ),
+                        validator: (value) =>
+                            Validators.validateConfirmPassword(
+                              value,
+                              _newPasswordController.text,
+                            ),
                         obscureText: true,
                         prefixIcon: const Icon(Icons.lock_outline),
                       ),

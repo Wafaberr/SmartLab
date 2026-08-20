@@ -56,11 +56,13 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           if (state is TokenInvalid) {
             SnackbarWidget.showError(context, state.error);
             Future.delayed(const Duration(seconds: 2), () {
+              if (!context.mounted) return;
               context.go('/reset_pass');
             });
           } else if (state is PasswordResetSuccess) {
             SnackbarWidget.showSuccess(context, state.message);
             Future.delayed(const Duration(seconds: 2), () {
+              if (!context.mounted) return;
               context.go('/login');
             });
           } else if (state is PasswordResetFailure) {

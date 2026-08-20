@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
@@ -41,8 +42,10 @@ class Product(models.Model):
 	storage_temperature = models.CharField(max_length=50, blank=True)
 	expiration_date = models.DateField(null=True, blank=True)
 	
-	# Media
-	image = models.URLField(blank=True)
+	# Media stored directly in the database.
+	image_data = models.BinaryField(null=True, blank=True)
+	image_content_type = models.CharField(max_length=100, blank=True)
+	image_name = models.CharField(max_length=255, blank=True)
 	
 	# Metadata
 	is_active = models.BooleanField(default=True)
@@ -69,3 +72,20 @@ class StockItem(models.Model):
 
 	def __str__(self):
 		return f"{self.product.reference} - {self.quantity} @ {self.location or 'default'}"
+
+
+class StockMovement(models.Model):
+	TYPE_CHOICES = [('entry', 'Entry'), ('exit', 'Exit'), ('adjustment', 'Adjustment')]
+
+	product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='movements')
+	user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='stock_movements')
+	movement_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+	quantity = models.FloatField()
+	stock_before = models.FloatField()
+	stock_after = models.FloatField()
+	reason = models.CharField(max_length=255, blank=True)
+	comment = models.TextField(blank=True)
+	created_at = models.DateTimeField(auto_now_add=True)
+
+	class Meta:
+		ordering = ['-created_at']

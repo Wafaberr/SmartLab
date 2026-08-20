@@ -14,15 +14,21 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.schemas import get_schema_view
 from django.views.generic import TemplateView
+from django.conf.urls.static import static
+from SmartLab import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('apps.auth.urls')),
     path('inventory/', include('apps.inventory.urls')),
+    path('laboratory/', include('apps.laboratory.urls')),
+    path('orders/', include('apps.orders.urls')),
+    path('notifications/', include('apps.notifications.urls')),
     path(
         'openapi/',
         get_schema_view(
@@ -39,3 +45,7 @@ urlpatterns = [
         name='swagger-ui',
     ),
 ]
+if settings.DEBUG:
+    urlpatterns += static(
+        settings.MEDIA_URL,
+        document_root=settings.MEDIA_ROOT)

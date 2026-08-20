@@ -1,18 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:smartlaboratory/features/products/data/repository/product_repository_impl.dart';
+import 'package:smartlaboratory/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:smartlaboratory/features/products/presentation/cubit/product_cubit.dart';
 import 'package:smartlaboratory/features/products/presentation/screens/product_details_screen.dart';
+import 'package:smartlaboratory/features/products/presentation/widget/product_image.dart';
 
-class ProductsListScreen extends StatelessWidget {
+class ProductsListScreen extends StatefulWidget {
   const ProductsListScreen({super.key});
 
   @override
+  State<ProductsListScreen> createState() => _ProductsListScreenState();
+}
+
+class _ProductsListScreenState extends State<ProductsListScreen> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<ProductCubit>().getProducts();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => ProductCubit(ProductRepositoryImpl())..getProducts(),
-      child: const ProductsListView(),
-    );
+    return const ProductsListView();
   }
 }
 
@@ -32,56 +41,60 @@ class ProductsListView extends StatelessWidget {
             return const Center(child: Text('Aucun produit trouvé'));
           }
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(8.0),
-            itemCount: state.products.length,
-            itemBuilder: (context, index) {
-              final product = state.products[index];
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 8.0),
-                child: ListTile(
-                  leading: product.image != null
-                      ? SizedBox(
-                          // product.image!,
-                          width: 50,
-                          height: 50,
-                          // fit: BoxFit.cover,
-                        )
-                      : Container(
-                          width: 50,
-                          height: 50,
-                          color: Colors.grey[300],
-                          child: const Icon(Icons.image),
+          return RefreshIndicator(
+            onRefresh: () => context.read<ProductCubit>().getProducts(),
+            child: ListView.separated(
+              padding: const EdgeInsets.all(8.0),
+              itemCount: state.products.length,
+              itemBuilder: (context, index) {
+                final product = state.products[index];
+
+                final authState = context.watch<AuthCubit>().state;
+
+                final isAdmin =
+                    authState is Authentificated && authState.user.isAdmin;
+
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: ListTile(
+                    leading: productImage(product),
+                    title: Text(product.name),
+                    subtitle: Text(
+                      'Référence: ${product.reference}\nStock: ${product.stockQuantity}',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: isAdmin
+                        ? IconButton(
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              color: Colors.red,
+                            ),
+                            onPressed: () {
+                              _showDeleteDialog(context, product);
+                            },
+                          )
+                        : null,
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              ProductDetailsScreen(productId: product.id),
                         ),
-                  title: Text(product.name),
-                  subtitle: Text(
-                    'Référence: ${product.reference}\nStock: ${product.stockQuantity}',
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    onPressed: () {
-                      _showDeleteDialog(context, product);
+                      );
+
+                      if (!context.mounted) return;
+
+                      context.read<ProductCubit>().getProducts();
                     },
                   ),
-                  onTap: () {
-                    // Navigate to product details
-                    context.read<ProductCubit>().getProduct(product.id);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            ProductDetailsScreen(productId: product.id),
-                      ),
-                    );
-                  },
-                ),
-              );
-            },
-            separatorBuilder: (BuildContext context, int index) {
-              return const Divider(color: Colors.grey, thickness: 1.0);
-            },
+                );
+              },
+              separatorBuilder: (BuildContext context, int index) {
+                return SizedBox(height: 5);
+              },
+            ),
           );
         }
 
@@ -121,8 +134,10 @@ class ProductsListView extends StatelessWidget {
               child: const Text('Annuler'),
             ),
             TextButton(
-              onPressed: () {
-                context.read<ProductCubit>().deleteProduct(product);
+              onPressed: () async {
+                final productCubit = context.read<ProductCubit>();
+                await productCubit.deleteProduct(product);
+                if (!context.mounted) return;
                 Navigator.of(context).pop();
               },
               child: const Text(

@@ -185,7 +185,7 @@ class PasswordResetLinkView(views.APIView):
             )
 
         mobile_link = (
-            f"{settings.MOBILE_RESET_PASSWORD_URL.rstrip('/')}/{token}"
+            f"{settings.MOBILE_RESET_PASSWORD_URL.rstrip('/')}/{token}/"
         )
         return MobileDeepLinkRedirect(mobile_link)
 

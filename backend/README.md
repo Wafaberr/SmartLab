@@ -22,10 +22,10 @@ Les erreurs de validation peuvent utiliser `errors` à la place de `error`.
 |--------|--------|-----------|--------|
 | Authentification | `/auth/` | signup, login, profile, forgot-password, reset-password, change-password | ✅ Actif |
 | Inventaire | `/inventory/` | categories, products, stock | ✅ Actif |
-| Laboratoire | `/laboratory/` | - | 🚧 En développement |
-| Commandes | `/orders/` | - | 🚧 En développement |
+| Laboratoire | `/laboratory/` | analysis-types, sessions, consumptions | ✅ Actif |
+| Commandes | `/orders/` | commandes, lignes de commande | ✅ Actif |
 | Fournisseurs | `/suppliers/` | - | 🚧 En développement |
-| Notifications | `/notifications/` | - | 🚧 En développement |
+| Notifications | `/notifications/` | liste, détail, lecture/suppression | ✅ Actif |
 | IA | `/ai/` | - | 🚧 En développement |
 
 ## Authentification
@@ -401,15 +401,60 @@ Met à jour un article en stock. Authentification requise.
 
 Supprime un article en stock. Authentification requise.
 
+### Mouvements de stock
+
+- `GET /inventory/products/<product_id>/movements/`
+- `POST /inventory/products/<product_id>/movements/`
+
+Le POST accepte `movement_type`, `quantity`, `reason` et `comment`. Il met à
+jour le stock dans une transaction, refuse les sorties impossibles et recalcule
+`is_low_stock`. L'historique conserve le stock avant et après chaque mouvement.
+
+Les images produit sont stockées en binaire dans la base (`image_data`), avec
+leur type MIME et leur nom. L'API renvoie une data URL base64 ; aucun fichier
+produit n'est nécessaire dans `media/`.
+
+## Laboratoire
+
+Les endpoints laboratoire nécessitent un JWT pour les opérations privées.
+
+- `GET/POST /laboratory/analysis-types/`
+- `GET/PUT/PATCH/DELETE /laboratory/analysis-types/<id>/`
+- `GET/POST /laboratory/sessions/`
+- `GET/PUT/PATCH/DELETE /laboratory/sessions/<id>/`
+- `POST /laboratory/sessions/<id>/consumptions/`
+- `PATCH /laboratory/sessions/<id>/start/`
+- `PATCH /laboratory/sessions/<id>/complete/`
+- `POST /laboratory/sessions/<id>/validate/`
+
+La validation reçoit les consommations réelles et les pertes, déduit le stock,
+crée les mouvements d'inventaire et clôture la session dans une transaction.
+
+Une session est automatiquement associée à l'utilisateur authentifié comme
+technicien.
+
+## Commandes
+
+- `GET/POST /orders/`
+- `GET/PUT/PATCH/DELETE /orders/<id>/`
+- `GET/POST /orders/<id>/items/`
+
+Une commande contient un fournisseur, un statut, une date prévue et des lignes
+produit avec quantité et prix unitaire. Le total est calculé par le backend.
+
+## Notifications
+
+- `GET /notifications/`
+- `GET/PUT/PATCH/DELETE /notifications/<id>/`
+
+Chaque utilisateur ne reçoit que ses propres notifications.
+
 ## Autres applications
 
 Les applications suivantes sont en développement et n'ont pas encore d'endpoints
 implémentés :
 
-- **Laboratory** (`/laboratory/`) : Gestion des essais et expériences
-- **Orders** (`/orders/`) : Gestion des commandes
 - **Suppliers** (`/suppliers/`) : Gestion des fournisseurs
-- **Notifications** (`/notifications/`) : Notifications et alertes
 - **AI** (`/ai/`) : Services d'intelligence artificielle
 
 
@@ -427,3 +472,18 @@ implémentés :
 
 Les tokens sont des JWT fournis par Django REST Framework Simple JWT. Le token
 d'accès expire après 60 minutes et le token de rafraîchissement après 1 jour.
+
+## Configuration serveur
+
+Configurez les secrets par variables d'environnement, notamment
+`EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL`, `FRONTEND_URL`
+et `MOBILE_RESET_PASSWORD_URL`.
+
+## Tests backend
+
+Pour exécuter les tests explicitement :
+
+```powershell
+python manage.py check
+python manage.py test apps.auth.tests apps.inventory.tests apps.laboratory.tests apps.orders.tests apps.notifications.tests
+```
