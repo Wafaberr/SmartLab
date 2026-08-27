@@ -77,6 +77,7 @@ class ProductCubit extends Cubit<ProductState> {
     String reason = '',
     String comment = '',
   }) async {
+    emit(ProductLoading());
     try {
       await productRepository.createMovement(
         productId: productId,

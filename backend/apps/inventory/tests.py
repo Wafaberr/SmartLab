@@ -43,3 +43,25 @@ class InventoryBasicTests(TestCase):
 		self.assertEqual(product.stock_quantity, 15)
 		self.assertEqual(StockMovement.objects.count(), 1)
 
+	def test_manual_stock_exit_decreases_quantity_and_records_reason(self):
+		product = Product.objects.create(
+			name='Réactif Glucose', reference='GLU-001', stock_quantity=20,
+		)
+		response = self.client.post(
+			f'/inventory/products/{product.id}/movements/',
+			{
+				'movement_type': 'exit',
+				'quantity': 5,
+				'reason': 'Consommation manuelle',
+				'comment': 'Sortie pour contrôle de routine',
+			},
+			format='json',
+		)
+		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+		self.assertEqual(response.data['movement_type'], 'exit')
+		self.assertEqual(response.data['reason'], 'Consommation manuelle')
+		self.assertEqual(response.data['comment'], 'Sortie pour contrôle de routine')
+		product.refresh_from_db()
+		self.assertEqual(product.stock_quantity, 15)
+		self.assertEqual(StockMovement.objects.count(), 1)
+

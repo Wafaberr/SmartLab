@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:smartlaboratory/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:smartlaboratory/features/products/presentation/screens/add_product_screen.dart';
 import 'package:smartlaboratory/features/products/presentation/screens/products_list_screen.dart';
+import 'package:smartlaboratory/features/auth/presentation/screens/users_management_screen.dart';
 
 class HomeMainScreen extends StatelessWidget {
   const HomeMainScreen({super.key});
@@ -14,13 +16,42 @@ class HomeMainScreen extends StatelessWidget {
         authState is Authentificated && authState.user.firstName.isNotEmpty
         ? authState.user.firstName
         : 'utilisateur';
+    final colorScheme = Theme.of(context).colorScheme;
+    final isAdmin = authState is Authentificated && authState.user.isAdmin;
 
     return ColoredBox(
-      color: const Color(0xFFF6F8FC),
+      color: colorScheme.surfaceContainerLowest,
       child: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 18, 20, 32),
           children: [
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: colorScheme.primary,
+                borderRadius: BorderRadius.circular(22),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      isAdmin ? 'Pilotage administrateur' : 'Espace technicien',
+                      style: TextStyle(
+                        color: colorScheme.onPrimary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.biotech_outlined,
+                    color: colorScheme.onPrimary,
+                    size: 34,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
@@ -29,24 +60,26 @@ class HomeMainScreen extends StatelessWidget {
                     children: [
                       Text(
                         'Bonjour,',
-                        style: TextStyle(color: Colors.grey.shade600),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       Text(
                         name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF172554),
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                     ],
                   ),
                 ),
                 CircleAvatar(
-                  backgroundColor: const Color(0xFF172554),
+                  backgroundColor: colorScheme.primary,
                   child: Text(
                     name.substring(0, 1).toUpperCase(),
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: colorScheme.onPrimary),
                   ),
                 ),
               ],
@@ -124,35 +157,41 @@ class HomeMainScreen extends StatelessWidget {
             const SizedBox(height: 10),
             Row(
               children: [
-                Expanded(
-                  child: _QuickAction(
-                    'Ajouter un produit',
-                    Icons.add_box_outlined,
-                    const Color(0xFF2563EB),
-                    () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const AddProductScreen(),
-                      ),
+                if (isAdmin) ...[
+                  Expanded(
+                    child: _QuickAction(
+                      'Ajouter un produit',
+                      Icons.add_box_outlined,
+                      const Color(0xFF2563EB),
+                      () => context.push('/addProduct'),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _QuickAction(
-                    'Voir les produits',
-                    Icons.inventory_2_outlined,
-                    const Color(0xFF059669),
-                    () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ProductsListScreen(),
-                      ),
-                    ),
-                  ),
-                ),
+                  const SizedBox(width: 12),
+                ],
               ],
             ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: _QuickAction(
+                'Types d’analyses',
+                Icons.analytics_outlined,
+                const Color(0xFF7C3AED),
+                () => context.push('/analyses'),
+              ),
+            ),
+            if (isAdmin) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: _QuickAction(
+                  'Gérer les utilisateurs',
+                  Icons.manage_accounts_outlined,
+                  const Color(0xFFDC2626),
+                  () => context.push('/UsersManagementScreen'),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -172,9 +211,9 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(14),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surface,
       borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: const Color(0xFFE5E7EB)),
+      border: Border.all(color: Theme.of(context).dividerColor),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -183,7 +222,10 @@ class _StatCard extends StatelessWidget {
         const SizedBox(height: 14),
         Text(
           label,
-          style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 12,
+          ),
         ),
         const SizedBox(height: 5),
         Text(
@@ -218,9 +260,9 @@ class _ActivityCard extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surface,
       borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: const Color(0xFFE5E7EB)),
+      border: Border.all(color: Theme.of(context).dividerColor),
     ),
     child: Row(
       children: [
@@ -235,7 +277,10 @@ class _ActivityCard extends StatelessWidget {
           children: [
             Text(
               title,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 13,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
@@ -254,7 +299,7 @@ class _QuickAction extends StatelessWidget {
   final String label;
   final IconData icon;
   final Color color;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const _QuickAction(this.label, this.icon, this.color, this.onTap);
 

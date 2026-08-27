@@ -48,8 +48,7 @@ dependencies:
   app_links: ^7.2.1
   stylish_bottom_bar: ^1.1.1
   image_picker: ^1.1.2
-  image_picker_android: ^0.8.13+19
-  flutter_secure_storage: ^8.1.0
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter

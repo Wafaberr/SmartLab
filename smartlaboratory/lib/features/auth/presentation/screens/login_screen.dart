@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:smartlaboratory/core/utils/validators.dart';
+import 'package:smartlaboratory/core/widgets/validators.dart';
 import 'package:smartlaboratory/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:smartlaboratory/features/auth/presentation/widgets/custom_text_field.dart';
+import 'package:smartlaboratory/features/auth/presentation/widgets/auth_background.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -51,15 +52,7 @@ class _LoginScreenState extends State<LoginScreen> {
           }
         },
         builder: (context, state) {
-          return Container(
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xffE8FFE5), Colors.white, Color(0xffFFF9D8)],
-              ),
-            ),
+          return AuthBackground(
             child: SafeArea(
               child: Form(
                 key: _formKey,
@@ -68,14 +61,25 @@ class _LoginScreenState extends State<LoginScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 25),
                   child: Column(
                     children: [
-                      const SizedBox(height: 150),
+                      const SizedBox(height: 32),
 
-                      const Text(
-                        "Welcome Back",
-                        style: TextStyle(
-                          fontSize: 34,
-                          fontWeight: FontWeight.bold,
+                      CircleAvatar(
+                        radius: 30,
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.primaryContainer,
+                        child: Icon(
+                          Icons.biotech_outlined,
+                          size: 32,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
+                      ),
+
+                      const SizedBox(height: 18),
+
+                      Text(
+                        "Welcome Back",
+                        style: Theme.of(context).textTheme.headlineSmall,
                       ),
 
                       const SizedBox(height: 10),
@@ -86,7 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: TextStyle(color: Colors.grey),
                       ),
 
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 28),
 
                       CustomTextField(
                         label: 'Email',
@@ -102,15 +106,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       CustomTextField(
                         label: 'password',
                         controller: passwordController,
-                        validator: Validators.validatePassword,
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Le mot de passe est requis'
+                            : null,
                         hintText: 'Entrez votre mot de passe',
                         obscureText: true,
                         prefixIcon: const Icon(Icons.lock_outline),
                       ),
-
-                      const SizedBox(height: 20),
-
-                      const SizedBox(height: 10),
 
                       Align(
                         alignment: Alignment.centerRight,
@@ -125,16 +127,18 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
 
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 12),
 
                       SizedBox(
                         width: double.infinity,
                         height: 58,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xff43F15C),
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.primary,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
+                              borderRadius: BorderRadius.circular(14),
                             ),
                           ),
                           onPressed: state is AuthLoading
@@ -150,7 +154,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                 },
                           child: const Text(
                             "Log In",
-                            style: TextStyle(fontSize: 18, color: Colors.black),
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ),
@@ -173,7 +181,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
 
-                      const SizedBox(height: 120),
+                      const SizedBox(height: 40),
 
                       const Text(
                         "By continuing to use CookShelf, you agree to our",

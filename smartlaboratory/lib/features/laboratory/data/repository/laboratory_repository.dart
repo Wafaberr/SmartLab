@@ -1,6 +1,7 @@
 import 'package:smartlaboratory/core/constants/endpoints.dart';
 import 'package:smartlaboratory/core/network/dio_client.dart';
 import 'package:smartlaboratory/features/laboratory/data/models/analysis_type_model.dart';
+import 'package:smartlaboratory/features/laboratory/data/models/lab_session_model.dart';
 
 class LaboratoryRepository {
   final DioClient _client = DioClient.instance;
@@ -10,6 +11,20 @@ class LaboratoryRepository {
     return (response.data as List<dynamic>)
         .map((item) => AnalysisTypeModel.fromJson(item as Map<String, dynamic>))
         .toList();
+  }
+
+  Future<AnalysisTypeModel> createAnalysisType({
+    required String name,
+    required int durationMinutes,
+    required double price,
+  }) async {
+    final response = await _client.post(
+      'laboratory/analysis-types/',
+      data: {'name': name, 'duration_minutes': durationMinutes, 'price': price},
+    );
+    return AnalysisTypeModel.fromJson(
+      Map<String, dynamic>.from(response.data as Map),
+    );
   }
 
   Future<int> createSession({
@@ -26,6 +41,22 @@ class LaboratoryRepository {
       },
     );
     return response.data['id'] as int;
+  }
+
+  Future<List<LabSessionModel>> getSessions() async {
+    final response = await _client.get(Endpoints.laboratorySessions);
+    return (response.data as List<dynamic>)
+        .map((item) => LabSessionModel.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<LabSessionModel> getSession(int sessionId) async {
+    final response = await _client.get(
+      '${Endpoints.laboratorySessions}$sessionId/',
+    );
+    return LabSessionModel.fromJson(
+      Map<String, dynamic>.from(response.data as Map),
+    );
   }
 
   Future<void> startSession(int sessionId) async {

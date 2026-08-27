@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smartlaboratory/features/laboratory/data/models/analysis_type_model.dart';
-import 'package:smartlaboratory/features/laboratory/data/repository/laboratory_repository.dart';
+import 'package:smartlaboratory/features/laboratory/presentation/cubit/laboratory_cubit.dart';
 import 'package:smartlaboratory/features/products/data/models/product_model.dart';
 import 'package:smartlaboratory/features/products/data/repository/product_repository_impl.dart';
 
@@ -13,7 +14,6 @@ class NewAnalysisSessionScreen extends StatefulWidget {
 }
 
 class _NewAnalysisSessionScreenState extends State<NewAnalysisSessionScreen> {
-  final _repository = LaboratoryRepository();
   final _productRepository = ProductRepositoryImpl();
   final _commentController = TextEditingController();
   final _sampleController = TextEditingController(text: '1');
@@ -50,7 +50,7 @@ class _NewAnalysisSessionScreenState extends State<NewAnalysisSessionScreen> {
 
   Future<void> _loadData() async {
     try {
-      final types = await _repository.getAnalysisTypes();
+      final types = await context.read<LaboratoryCubit>().getAnalysisTypes();
       final products = await _productRepository.getProducts();
       if (!mounted) return;
       setState(() {
@@ -260,12 +260,13 @@ class _NewAnalysisSessionScreenState extends State<NewAnalysisSessionScreen> {
     if (_step == 1 && _sessionId == null) {
       setState(() => _saving = true);
       try {
-        _sessionId = await _repository.createSession(
-          analysisTypeId: _selectedType!.id,
-          sampleCount: int.parse(_sampleController.text),
-          comment: _commentController.text.trim(),
-        );
-        await _repository.startSession(_sessionId!);
+        _sessionId = await context
+            .read<LaboratoryCubit>()
+            .createAndStartSession(
+              analysisTypeId: _selectedType!.id,
+              sampleCount: int.parse(_sampleController.text),
+              comment: _commentController.text.trim(),
+            );
       } catch (error) {
         if (mounted) {
           ScaffoldMessenger.of(
@@ -315,7 +316,7 @@ class _NewAnalysisSessionScreenState extends State<NewAnalysisSessionScreen> {
       }
     }
     try {
-      await _repository.validateSession(
+      await context.read<LaboratoryCubit>().validateSession(
         _sessionId!,
         consumptions: consumptions,
         losses: losses,

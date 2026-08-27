@@ -61,7 +61,7 @@ class _UpdateProductScreenState extends State<UpdateProductScreen> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
           children: [
             _field(_name, 'Nom du produit', required: true),
             _field(_reference, 'Référence', required: true),
@@ -72,7 +72,7 @@ class _UpdateProductScreenState extends State<UpdateProductScreen> {
             _field(_temperature, 'Température de stockage'),
             _field(_expiration, 'Date d’expiration (AAAA-MM-JJ)'),
             _field(_description, 'Description', maxLines: 4),
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
             SizedBox(
               height: 52,
               child: FilledButton.icon(
@@ -100,6 +100,8 @@ class _UpdateProductScreenState extends State<UpdateProductScreen> {
     bool number = false,
     int maxLines = 1,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: TextFormField(
@@ -111,6 +113,8 @@ class _UpdateProductScreenState extends State<UpdateProductScreen> {
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),
+          filled: true,
+          fillColor: colorScheme.surfaceContainerHighest,
         ),
         validator: required
             ? (value) => value == null || value.trim().isEmpty

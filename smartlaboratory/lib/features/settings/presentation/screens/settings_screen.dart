@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smartlaboratory/core/localization/app_locale.dart';
+import 'package:smartlaboratory/core/theme/theme_controller.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -8,20 +9,23 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final locale = AppLocaleScope.of(context);
+    final theme = ThemeScope.of(context);
     return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: EdgeInsets.zero,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   locale.text('more'),
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 18),
                 _buildSettingsTile(
+                  context: context,
                   icon: Icons.person_outline,
                   title: locale.text('profile'),
                   subtitle: locale.text('manageProfile'),
@@ -29,25 +33,24 @@ class SettingsScreen extends StatelessWidget {
                     context.push('/profile');
                   },
                 ),
+                _buildThemeTile(context, theme),
+
                 _buildSettingsTile(
-                  icon: Icons.settings,
-                  title: locale.text('settings'),
-                  subtitle: locale.text('settingsSubtitle'),
-                  onTap: () => _showLanguageDialog(context),
-                ),
-                _buildSettingsTile(
+                  context: context,
                   icon: Icons.language,
                   title: locale.text('language'),
                   subtitle: locale.text('languageSubtitle'),
                   onTap: () => _showLanguageDialog(context),
                 ),
                 _buildSettingsTile(
+                  context: context,
                   icon: Icons.help_outline,
                   title: locale.text('help'),
                   subtitle: locale.text('helpSubtitle'),
                   onTap: () {},
                 ),
                 _buildSettingsTile(
+                  context: context,
                   icon: Icons.info_outline,
                   title: locale.text('about'),
                   subtitle: locale.text('version'),
@@ -87,7 +90,35 @@ class SettingsScreen extends StatelessWidget {
     ).showSnackBar(SnackBar(content: Text(locale.text('languageChanged'))));
   }
 
+  Widget _buildThemeTile(BuildContext context, ThemeController theme) {
+    final colors = Theme.of(context).colorScheme;
+    return Column(
+      children: [
+        ListTile(
+          leading: CircleAvatar(
+            radius: 20,
+            backgroundColor: colors.primaryContainer,
+            child: Icon(
+              theme.isDark
+                  ? Icons.dark_mode_outlined
+                  : Icons.light_mode_outlined,
+              color: colors.primary,
+            ),
+          ),
+          title: const Text('Mode sombre'),
+          subtitle: Text(theme.isDark ? 'Activé' : 'Désactivé'),
+          trailing: Switch.adaptive(
+            value: theme.isDark,
+            onChanged: theme.setDarkMode,
+          ),
+        ),
+        const Divider(height: 1),
+      ],
+    );
+  }
+
   Widget _buildSettingsTile({
+    required BuildContext context,
     required IconData icon,
     required String title,
     required String subtitle,
@@ -96,10 +127,17 @@ class SettingsScreen extends StatelessWidget {
     return Column(
       children: [
         ListTile(
-          leading: Icon(icon, color: const Color.fromARGB(255, 54, 214, 126)),
+          leading: CircleAvatar(
+            radius: 20,
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+            child: Icon(icon, color: Theme.of(context).colorScheme.primary),
+          ),
           title: Text(title),
           subtitle: Text(subtitle),
-          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+          trailing: Icon(
+            Icons.chevron_right,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
           onTap: onTap,
         ),
         const Divider(height: 1),

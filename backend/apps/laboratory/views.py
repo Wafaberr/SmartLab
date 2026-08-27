@@ -4,8 +4,8 @@ from django.utils import timezone
 from rest_framework import generics, permissions, serializers, status
 from rest_framework.response import Response
 
-from .models import AnalysisType, LabSession, SessionConsumption, SessionLoss
-from .serializers import AnalysisTypeSerializer, LabSessionSerializer, SessionConsumptionSerializer
+from .models import AnalysisRecipe, AnalysisType, LabSession, SessionConsumption, SessionLoss
+from .serializers import AnalysisRecipeSerializer, AnalysisTypeSerializer, LabSessionSerializer, SessionConsumptionSerializer
 
 
 class AnalysisTypeListCreateView(generics.ListCreateAPIView):
@@ -20,6 +20,19 @@ class AnalysisTypeDetailView(generics.RetrieveUpdateDestroyAPIView):
 	permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
+class AnalysisRecipeListCreateView(generics.ListCreateAPIView):
+	serializer_class = AnalysisRecipeSerializer
+	permission_classes = [permissions.IsAuthenticated]
+
+	def get_queryset(self):
+		return AnalysisRecipe.objects.filter(
+			analysis_type_id=self.kwargs['analysis_type_id']
+		).select_related('product')
+
+	def perform_create(self, serializer):
+		serializer.save(analysis_type_id=self.kwargs['analysis_type_id'])
+
+
 class LabSessionListCreateView(generics.ListCreateAPIView):
 	serializer_class = LabSessionSerializer
 	permission_classes = [permissions.IsAuthenticated]
@@ -28,7 +41,17 @@ class LabSessionListCreateView(generics.ListCreateAPIView):
 		return LabSession.objects.select_related('analysis_type', 'technician').prefetch_related('consumptions')
 
 	def perform_create(self, serializer):
-		serializer.save(technician=self.request.user)
+		session = serializer.save(technician=self.request.user)
+		recipes = session.analysis_type.recipes.select_related('product')
+		SessionConsumption.objects.bulk_create([
+			SessionConsumption(
+				session=session,
+				product=recipe.product,
+				planned_quantity=recipe.quantity_per_sample * session.sample_count,
+				unit=recipe.unit or recipe.product.unit,
+			)
+			for recipe in recipes
+		])
 
 
 class LabSessionDetailView(generics.RetrieveUpdateDestroyAPIView):

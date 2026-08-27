@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smartlaboratory/features/auth/data/models/user_model.dart';
@@ -11,8 +13,12 @@ class _FakeAuthRepository implements AuthRepository {
       Future.error(UnimplementedError());
 
   @override
-  Future<User> signup(String name, String email, String password) =>
-      Future.error(UnimplementedError());
+  Future<User> signup(
+    String name,
+    String email,
+    String password, {
+    File? imageFile,
+  }) => Future.error(UnimplementedError());
 
   @override
   Future<void> logout() async {}
@@ -21,7 +27,11 @@ class _FakeAuthRepository implements AuthRepository {
   Future<User> getProfile(String token) => Future.error(UnimplementedError());
 
   @override
-  Future<User> updateProfile({String? firstName, String? lastName}) {
+  Future<User> updateProfile({
+    String? firstName,
+    String? lastName,
+    File? imageFile,
+  }) {
     // TODO: implement updateProfile
     throw UnimplementedError();
   }
@@ -40,6 +50,6 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(seconds: 6));
 
-    expect(find.text('FlavorLy'), findsOneWidget);
+    expect(find.text('SmartLab Stock AI'), findsOneWidget);
   });
 }

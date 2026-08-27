@@ -17,6 +17,19 @@ class AnalysisType(models.Model):
 		return self.name
 
 
+class AnalysisRecipe(models.Model):
+	analysis_type = models.ForeignKey(AnalysisType, on_delete=models.CASCADE, related_name='recipes')
+	product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='analysis_recipes')
+	quantity_per_sample = models.FloatField()
+	unit = models.CharField(max_length=50, blank=True)
+
+	class Meta:
+		unique_together = ('analysis_type', 'product')
+
+	def __str__(self):
+		return f'{self.analysis_type} - {self.product}'
+
+
 class LabSession(models.Model):
 	STATUS_CHOICES = [
 		('draft', 'Draft'),

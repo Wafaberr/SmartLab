@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:smartlaboratory/core/utils/image_picker.dart';
 import 'package:smartlaboratory/features/auth/data/models/user_model.dart';
 import 'package:smartlaboratory/features/auth/presentation/cubit/auth_cubit.dart';
 
@@ -16,6 +19,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late final TextEditingController _firstNameController;
   late final TextEditingController _lastNameController;
   final _formKey = GlobalKey<FormState>();
+  File? selectedImage;
 
   @override
   void initState() {
@@ -74,6 +78,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
+                  Center(
+                    child: GestureDetector(
+                      onTap: _pickImage,
+                      child: CircleAvatar(
+                        radius: 52,
+                        backgroundImage: selectedImage == null
+                            ? null
+                            : FileImage(selectedImage!),
+                        child: selectedImage == null
+                            ? const Icon(Icons.add_a_photo_outlined, size: 32)
+                            : null,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   SizedBox(
                     height: 50,
                     child: FilledButton(
@@ -101,6 +120,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     await context.read<AuthCubit>().updateProfile(
       firstName: _firstNameController.text.trim(),
       lastName: _lastNameController.text.trim(),
+      imageFile: selectedImage,
     );
+  }
+
+  Future<void> _pickImage() async {
+    final image = await AppImagePicker.pickImage(context);
+    if (image == null || !mounted) return;
+
+    setState(() {
+      selectedImage = image;
+    });
   }
 }

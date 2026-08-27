@@ -4,13 +4,9 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class LoadingWidget extends StatelessWidget {
   final String? message;
-  final Color color;
+  final Color? color;
 
-  const LoadingWidget({
-    super.key,
-    this.message,
-    this.color = const Color(0xFF4CAF50),
-  });
+  const LoadingWidget({super.key, this.message, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -19,16 +15,16 @@ class LoadingWidget extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           LoadingAnimationWidget.staggeredDotsWave(
-            color: color,
+            color: color ?? Theme.of(context).colorScheme.primary,
             size: 50,
           ),
           if (message != null) ...[
             const SizedBox(height: 16),
             Text(
               message!,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
               textAlign: TextAlign.center,
             ),

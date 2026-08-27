@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:smartlaboratory/core/storage/shared_perefs_service.dart';
 import 'package:smartlaboratory/features/auth/data/data_source/auth_remote_datasource.dart';
 import 'package:smartlaboratory/features/auth/data/models/user_model.dart';
@@ -22,9 +24,19 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<User> signup(String name, String email, String password) async {
+  Future<User> signup(
+    String name,
+    String email,
+    String password, {
+    File? imageFile,
+  }) async {
     try {
-      final user = await authRemoteDatasource.signup(name, email, password);
+      final user = await authRemoteDatasource.signup(
+        name,
+        email,
+        password,
+        imageFile: imageFile,
+      );
       return user;
     } catch (e) {
       rethrow;
@@ -42,10 +54,15 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<User> updateProfile({String? firstName, String? lastName}) {
+  Future<User> updateProfile({
+    String? firstName,
+    String? lastName,
+    File? imageFile,
+  }) {
     return authRemoteDatasource.updateProfile(
       firstName: firstName,
       lastName: lastName,
+      imageFile: imageFile,
     );
   }
 }

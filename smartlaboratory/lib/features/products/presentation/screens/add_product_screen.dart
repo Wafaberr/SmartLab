@@ -2,8 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:image_picker/image_picker.dart';
 
+import 'package:smartlaboratory/core/utils/image_picker.dart';
+import 'package:smartlaboratory/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:smartlaboratory/features/products/data/models/category_model.dart';
 import 'package:smartlaboratory/features/products/data/models/product_model.dart';
 import 'package:smartlaboratory/features/products/presentation/cubit/product_cubit.dart';
@@ -18,44 +19,57 @@ class AddProductScreen extends StatefulWidget {
 class _AddProductScreenState extends State<AddProductScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  @override
+  void initState() {
+    super.initState();
+    final authState = context.read<AuthCubit>().state;
+    if (authState is! Authentificated || !authState.user.isAdmin) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Accès réservé aux administrateurs.')),
+        );
+        Navigator.of(context).pop();
+      });
+    }
+  }
+
   // ============================================================
   // CONTROLLERS
   // ============================================================
 
-  final TextEditingController nameController =
-      TextEditingController();
+  final TextEditingController nameController = TextEditingController();
 
-  final TextEditingController referenceController =
-      TextEditingController();
+  final TextEditingController referenceController = TextEditingController();
 
-  final TextEditingController barcodeController =
-      TextEditingController();
+  final TextEditingController barcodeController = TextEditingController();
 
-  final TextEditingController minimumStockController =
-      TextEditingController();
+  final TextEditingController minimumStockController = TextEditingController();
 
-  final TextEditingController maximumStockController =
-      TextEditingController();
+  final TextEditingController maximumStockController = TextEditingController();
 
-  final TextEditingController purchasePriceController =
-      TextEditingController();
+  final TextEditingController purchasePriceController = TextEditingController();
 
   final TextEditingController expirationDateController =
       TextEditingController();
 
-  final TextEditingController temperatureController =
-      TextEditingController();
+  final TextEditingController temperatureController = TextEditingController();
 
-  final TextEditingController descriptionController =
-      TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
 
   // ============================================================
   // IMAGE
   // ============================================================
 
-  final ImagePicker _picker = ImagePicker();
-
   File? selectedImage;
+  Future<void> _pickImage() async {
+    final image = await AppImagePicker.pickImage(context);
+    if (image == null || !mounted) return;
+
+    setState(() {
+      selectedImage = image;
+    });
+  }
 
   // ============================================================
   // CATEGORY
@@ -82,21 +96,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
   // ============================================================
 
   final List<CategoryModel> categories = [
-    CategoryModel(
-      id: 1,
-      name: 'Réactifs',
-      description: '',
-    ),
-    CategoryModel(
-      id: 2,
-      name: 'Consommables',
-      description: '',
-    ),
-    CategoryModel(
-      id: 3,
-      name: 'Tubes de prélèvement',
-      description: '',
-    ),
+    CategoryModel(id: 1, name: 'Réactifs', description: ''),
+    CategoryModel(id: 2, name: 'Consommables', description: ''),
+    CategoryModel(id: 3, name: 'Tubes de prélèvement', description: ''),
   ];
 
   @override
@@ -118,68 +120,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
   // PICK IMAGE
   // ============================================================
 
-  Future<void> _pickImage() async {
-    final ImageSource? source =
-        await showModalBottomSheet<ImageSource>(
-      context: context,
-      builder: (bottomSheetContext) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(
-                  Icons.photo_library_outlined,
-                ),
-                title: const Text('Galerie'),
-                onTap: () {
-                  Navigator.pop(
-                    bottomSheetContext,
-                    ImageSource.gallery,
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.camera_alt_outlined,
-                ),
-                title: const Text('Caméra'),
-                onTap: () {
-                  Navigator.pop(
-                    bottomSheetContext,
-                    ImageSource.camera,
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-
-    if (source == null) {
-      return;
-    }
-
-    final XFile? pickedFile = await _picker.pickImage(
-      source: source,
-      imageQuality: 80,
-      maxWidth: 1200,
-    );
-
-    if (pickedFile == null) {
-      return;
-    }
-
-    if (!mounted) {
-      return;
-    }
-
-    setState(() {
-      selectedImage = File(pickedFile.path);
-    });
-  }
-
   // ============================================================
   // SAVE PRODUCT
   // ============================================================
@@ -191,11 +131,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
     if (selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Veuillez sélectionner une catégorie.',
-          ),
-        ),
+        const SnackBar(content: Text('Veuillez sélectionner une catégorie.')),
       );
       return;
     }
@@ -212,15 +148,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
       purchasePriceController.text.replaceAll(',', '.'),
     );
 
-    if (minimumStock == null ||
-        maximumStock == null ||
-        purchasePrice == null) {
+    if (minimumStock == null || maximumStock == null || purchasePrice == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Vérifiez les valeurs numériques.',
-          ),
-        ),
+        const SnackBar(content: Text('Vérifiez les valeurs numériques.')),
       );
       return;
     }
@@ -252,30 +182,27 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
       purchasePrice: purchasePrice,
 
-      expirationDate:
-          expirationDateController.text.trim().isEmpty
-              ? null
-              : expirationDateController.text.trim(),
+      expirationDate: expirationDateController.text.trim().isEmpty
+          ? null
+          : expirationDateController.text.trim(),
 
-      storageTemperature:
-          temperatureController.text.trim(),
+      storageTemperature: temperatureController.text.trim(),
 
       // IMPORTANT :
       // image = URL venant de Django.
       // Le fichier local est envoyé séparément.
       image: null,
 
-      description:
-          descriptionController.text.trim(),
+      description: descriptionController.text.trim(),
 
       isLowStock: false,
     );
 
     // Le File est envoyé séparément au Cubit.
     context.read<ProductCubit>().createProduct(
-          product,
-          imageFile: selectedImage,
-        );
+      product,
+      imageFile: selectedImage,
+    );
   }
 
   // ============================================================
@@ -286,9 +213,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Ajouter un produit',
-        ),
+        title: const Text('Ajouter un produit'),
         centerTitle: true,
       ),
 
@@ -300,17 +225,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
           if (state is ProductLoaded) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Produit ajouté avec succès.',
-                ),
-              ),
+              const SnackBar(content: Text('Produit ajouté avec succès.')),
             );
 
-            Navigator.pop(
-              context,
-              true,
-            );
+            Navigator.pop(context, true);
           }
 
           // ============================
@@ -318,20 +236,15 @@ class _AddProductScreenState extends State<AddProductScreen> {
           // ============================
 
           if (state is ProductError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  state.message,
-                ),
-              ),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message)));
           }
         },
 
         child: BlocBuilder<ProductCubit, ProductState>(
           builder: (context, state) {
-            final bool isLoading =
-                state is ProductLoading;
+            final bool isLoading = state is ProductLoading;
 
             return Form(
               key: _formKey,
@@ -341,7 +254,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   // ==================================================
                   // IMAGE
                   // ==================================================
-
                   _buildImagePicker(),
 
                   const SizedBox(height: 25),
@@ -349,20 +261,16 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   // ==================================================
                   // NAME
                   // ==================================================
-
                   TextFormField(
                     controller: nameController,
                     decoration: const InputDecoration(
                       labelText: 'Nom du produit',
                       hintText: 'Ex : Réactif CRP',
-                      prefixIcon: Icon(
-                        Icons.science_outlined,
-                      ),
+                      prefixIcon: Icon(Icons.science_outlined),
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
-                      if (value == null ||
-                          value.trim().isEmpty) {
+                      if (value == null || value.trim().isEmpty) {
                         return 'Le nom est obligatoire.';
                       }
 
@@ -375,20 +283,16 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   // ==================================================
                   // REFERENCE
                   // ==================================================
-
                   TextFormField(
                     controller: referenceController,
                     decoration: const InputDecoration(
                       labelText: 'Référence',
                       hintText: 'Ex : CRP-001',
-                      prefixIcon: Icon(
-                        Icons.tag,
-                      ),
+                      prefixIcon: Icon(Icons.tag),
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
-                      if (value == null ||
-                          value.trim().isEmpty) {
+                      if (value == null || value.trim().isEmpty) {
                         return 'La référence est obligatoire.';
                       }
 
@@ -401,15 +305,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   // ==================================================
                   // BARCODE
                   // ==================================================
-
                   TextFormField(
                     controller: barcodeController,
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
                       labelText: 'Code-barres',
-                      prefixIcon: Icon(
-                        Icons.qr_code_scanner,
-                      ),
+                      prefixIcon: Icon(Icons.qr_code_scanner),
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -419,26 +320,19 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   // ==================================================
                   // CATEGORY
                   // ==================================================
-
                   DropdownButtonFormField<CategoryModel>(
                     initialValue: selectedCategory,
                     decoration: const InputDecoration(
                       labelText: 'Catégorie',
-                      prefixIcon: Icon(
-                        Icons.category_outlined,
-                      ),
+                      prefixIcon: Icon(Icons.category_outlined),
                       border: OutlineInputBorder(),
                     ),
-                    items: categories.map(
-                      (CategoryModel category) {
-                        return DropdownMenuItem<CategoryModel>(
-                          value: category,
-                          child: Text(
-                            category.name,
-                          ),
-                        );
-                      },
-                    ).toList(),
+                    items: categories.map((CategoryModel category) {
+                      return DropdownMenuItem<CategoryModel>(
+                        value: category,
+                        child: Text(category.name),
+                      );
+                    }).toList(),
                     onChanged: (CategoryModel? value) {
                       setState(() {
                         selectedCategory = value;
@@ -458,41 +352,20 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   // ==================================================
                   // UNIT
                   // ==================================================
-
                   DropdownButtonFormField<String>(
                     initialValue: selectedUnit,
                     decoration: const InputDecoration(
                       labelText: 'Unité',
-                      prefixIcon: Icon(
-                        Icons.straighten,
-                      ),
+                      prefixIcon: Icon(Icons.straighten),
                       border: OutlineInputBorder(),
                     ),
                     items: const [
-                      DropdownMenuItem(
-                        value: 'piece',
-                        child: Text('Pièce'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'ml',
-                        child: Text('Millilitre'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'l',
-                        child: Text('Litre'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'g',
-                        child: Text('Gramme'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'kg',
-                        child: Text('Kilogramme'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'box',
-                        child: Text('Boîte'),
-                      ),
+                      DropdownMenuItem(value: 'piece', child: Text('Pièce')),
+                      DropdownMenuItem(value: 'ml', child: Text('Millilitre')),
+                      DropdownMenuItem(value: 'l', child: Text('Litre')),
+                      DropdownMenuItem(value: 'g', child: Text('Gramme')),
+                      DropdownMenuItem(value: 'kg', child: Text('Kilogramme')),
+                      DropdownMenuItem(value: 'box', child: Text('Boîte')),
                     ],
                     onChanged: (String? value) {
                       if (value == null) {
@@ -510,20 +383,15 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   // ==================================================
                   // MINIMUM STOCK
                   // ==================================================
-
                   TextFormField(
-                    controller:
-                        minimumStockController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(
+                    controller: minimumStockController,
+                    keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
                     decoration: const InputDecoration(
                       labelText: 'Stock minimum',
                       hintText: 'Ex : 100',
-                      prefixIcon: Icon(
-                        Icons.warning_amber_outlined,
-                      ),
+                      prefixIcon: Icon(Icons.warning_amber_outlined),
                       border: OutlineInputBorder(),
                     ),
                     validator: _validateNumber,
@@ -534,20 +402,15 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   // ==================================================
                   // MAXIMUM STOCK
                   // ==================================================
-
                   TextFormField(
-                    controller:
-                        maximumStockController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(
+                    controller: maximumStockController,
+                    keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
                     decoration: const InputDecoration(
                       labelText: 'Stock maximum',
                       hintText: 'Ex : 1000',
-                      prefixIcon: Icon(
-                        Icons.inventory_2_outlined,
-                      ),
+                      prefixIcon: Icon(Icons.inventory_2_outlined),
                       border: OutlineInputBorder(),
                     ),
                     validator: _validateNumber,
@@ -558,20 +421,15 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   // ==================================================
                   // PURCHASE PRICE
                   // ==================================================
-
                   TextFormField(
-                    controller:
-                        purchasePriceController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(
+                    controller: purchasePriceController,
+                    keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
                     decoration: const InputDecoration(
                       labelText: 'Prix d’achat',
                       hintText: 'Ex : 2500.00',
-                      prefixIcon: Icon(
-                        Icons.payments_outlined,
-                      ),
+                      prefixIcon: Icon(Icons.payments_outlined),
                       border: OutlineInputBorder(),
                     ),
                     validator: _validateNumber,
@@ -582,16 +440,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   // ==================================================
                   // EXPIRATION DATE
                   // ==================================================
-
                   TextFormField(
-                    controller:
-                        expirationDateController,
+                    controller: expirationDateController,
                     readOnly: true,
                     decoration: const InputDecoration(
                       labelText: 'Date d’expiration',
-                      prefixIcon: Icon(
-                        Icons.calendar_today_outlined,
-                      ),
+                      prefixIcon: Icon(Icons.calendar_today_outlined),
                       border: OutlineInputBorder(),
                     ),
                     onTap: _selectExpirationDate,
@@ -602,17 +456,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   // ==================================================
                   // STORAGE TEMPERATURE
                   // ==================================================
-
                   TextFormField(
-                    controller:
-                        temperatureController,
+                    controller: temperatureController,
                     decoration: const InputDecoration(
-                      labelText:
-                          'Température de stockage',
+                      labelText: 'Température de stockage',
                       hintText: 'Ex : 2-8°C',
-                      prefixIcon: Icon(
-                        Icons.thermostat_outlined,
-                      ),
+                      prefixIcon: Icon(Icons.thermostat_outlined),
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -622,17 +471,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   // ==================================================
                   // DESCRIPTION
                   // ==================================================
-
                   TextFormField(
-                    controller:
-                        descriptionController,
+                    controller: descriptionController,
                     maxLines: 4,
                     decoration: const InputDecoration(
                       labelText: 'Description',
                       alignLabelWithHint: true,
-                      prefixIcon: Icon(
-                        Icons.description_outlined,
-                      ),
+                      prefixIcon: Icon(Icons.description_outlined),
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -642,26 +487,17 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   // ==================================================
                   // SAVE
                   // ==================================================
-
                   SizedBox(
                     height: 52,
                     child: FilledButton(
-                      onPressed:
-                          isLoading
-                              ? null
-                              : _saveProduct,
+                      onPressed: isLoading ? null : _saveProduct,
                       child: isLoading
                           ? const SizedBox(
                               width: 22,
                               height: 22,
-                              child:
-                                  CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Text(
-                              'Ajouter le produit',
-                            ),
+                          : const Text('Ajouter le produit'),
                     ),
                   ),
 
@@ -689,14 +525,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
           decoration: BoxDecoration(
             color: Colors.grey.shade100,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Colors.grey.shade300,
-            ),
+            border: Border.all(color: Colors.grey.shade300),
           ),
           child: selectedImage == null
               ? const Column(
-                  mainAxisAlignment:
-                      MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
                       Icons.add_a_photo_outlined,
@@ -706,15 +539,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     SizedBox(height: 8),
                     Text(
                       'Ajouter une photo',
-                      style: TextStyle(
-                        color: Colors.grey,
-                      ),
+                      style: TextStyle(color: Colors.grey),
                     ),
                   ],
                 )
               : ClipRRect(
-                  borderRadius:
-                      BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(20),
                   child: Image.file(
                     selectedImage!,
                     width: 150,
@@ -732,8 +562,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
   // ============================================================
 
   Future<void> _selectExpirationDate() async {
-    final DateTime? date =
-        await showDatePicker(
+    final DateTime? date = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime.now(),
@@ -744,14 +573,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
       return;
     }
 
-    final String month =
-        date.month.toString().padLeft(2, '0');
+    final String month = date.month.toString().padLeft(2, '0');
 
-    final String day =
-        date.day.toString().padLeft(2, '0');
+    final String day = date.day.toString().padLeft(2, '0');
 
-    expirationDateController.text =
-        '${date.year}-$month-$day';
+    expirationDateController.text = '${date.year}-$month-$day';
   }
 
   // ============================================================
@@ -759,14 +585,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
   // ============================================================
 
   String? _validateNumber(String? value) {
-    if (value == null ||
-        value.trim().isEmpty) {
+    if (value == null || value.trim().isEmpty) {
       return 'Ce champ est obligatoire.';
     }
 
-    final double? number = double.tryParse(
-      value.replaceAll(',', '.'),
-    );
+    final double? number = double.tryParse(value.replaceAll(',', '.'));
 
     if (number == null) {
       return 'Veuillez entrer un nombre valide.';

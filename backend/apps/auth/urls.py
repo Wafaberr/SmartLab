@@ -14,4 +14,6 @@ urlpatterns = [
     path('reset-password/validate/<uuid:token>/', views.ValidateTokenView.as_view(), name='password_reset_validate'),
     path('change-password/', views.PasswordChangeView.as_view(), name='password_change'),
     path('profile/', views.UserProfileView.as_view(), name='profile'),
+    path('users/', views.AdminUserListCreateView.as_view(), name='admin_users'),
+    path('users/<int:pk>/', views.AdminUserDetailView.as_view(), name='admin_user_detail'),
 ]

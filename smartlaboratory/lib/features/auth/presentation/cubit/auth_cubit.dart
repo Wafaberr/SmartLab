@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 import 'package:smartlaboratory/core/storage/shared_perefs_service.dart';
@@ -11,7 +13,7 @@ class AuthCubit extends Cubit<AuthState> {
   AuthCubit(this.authRepository) : super(AuthInitial());
 
   Future<void> checkAuth() async {
-    emit(AuthLoading());
+    emit(AuthChecking());
 
     try {
       final token = await SharedPerefsService.instance.getString("token");
@@ -47,24 +49,39 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  Future<void> signup(String name, String email, String password) async {
+  Future<void> signup(
+    String name,
+    String email,
+    String password, {
+    File? imageFile,
+  }) async {
     emit(AuthLoading());
     // print('🚀 AuthCubit: Starting ');
     try {
       // print('🚀 AuthCubit: Starting signup');
-      final user = await authRepository.signup(name, email, password);
+      final user = await authRepository.signup(
+        name,
+        email,
+        password,
+        imageFile: imageFile,
+      );
       emit(Authentificated(user: user));
     } catch (e) {
       emit(AuthError(message: e.toString()));
     }
   }
 
-  Future<void> updateProfile({String? firstName, String? lastName}) async {
+  Future<void> updateProfile({
+    String? firstName,
+    String? lastName,
+    File? imageFile,
+  }) async {
     emit(AuthLoading());
     try {
       final user = await authRepository.updateProfile(
         firstName: firstName,
         lastName: lastName,
+        imageFile: imageFile,
       );
       emit(Authentificated(user: user));
     } catch (e) {

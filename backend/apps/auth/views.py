@@ -10,10 +10,11 @@ from rest_framework.exceptions import AuthenticationFailed
 from apps.auth import serializers as auth_serializers
 from apps.auth.models import PasswordResetToken, User
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
 from datetime import timedelta
-from django.contrib.auth import authenticate, update_session_auth_hash
+from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -23,6 +24,7 @@ from django.urls import reverse
 
 
 from .utils import send_password_reset_email, validate_password_strength
+from .permissions import IsAdmin
 
 # Create your views here.
 
@@ -36,7 +38,7 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
         self.fields["email"].required = False
 
     def validate(self, attrs):
-        email = attrs.get("email") or attrs.get("username")
+        email = (attrs.get("email") or attrs.get("username") or "").strip().lower()
         password = attrs.get("password")
 
         if not email or not password:
@@ -46,15 +48,17 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
         if not user:
             raise AuthenticationFailed("No account found for this email")
 
-        authenticated_user = authenticate(username=email, password=password)
-        if not authenticated_user:
+        # if not user.is_active:
+        #     raise AuthenticationFailed("Ce compte est désactivé")
+
+        if not user.check_password(password):
             raise AuthenticationFailed("No active account found with the given credentials")
 
-        refresh = RefreshToken.for_user(authenticated_user)
+        refresh = RefreshToken.for_user(user)
         data = {
             "refresh": str(refresh),
             "access": str(refresh.access_token),
-            "user": auth_serializers.UserSerializer(authenticated_user).data,
+            "user": auth_serializers.UserSerializer(user).data,
         }
         return data
 
@@ -64,6 +68,8 @@ class EmailTokenObtainPairView(TokenObtainPairView):
 
 
 class SignupView(APIView):
+    permission_classes = [IsAdmin]
+
     def post(self, request):
         username = request.data.get("username")
         email = request.data.get("email")
@@ -79,6 +85,20 @@ class SignupView(APIView):
         refresh = RefreshToken.for_user(user)
 
         return Response({"user": auth_serializers.UserSerializer(user).data, "access": str(refresh.access_token), "refresh": str(refresh)}, status=status.HTTP_201_CREATED)
+
+
+class AdminUserListCreateView(generics.ListCreateAPIView):
+    queryset = User.objects.all().order_by('username')
+    serializer_class = auth_serializers.AdminUserSerializer
+    permission_classes = [IsAdmin]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+
+class AdminUserDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = auth_serializers.AdminUserSerializer
+    permission_classes = [IsAdmin]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
 # accounts/views.py
 

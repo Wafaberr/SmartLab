@@ -11,6 +11,17 @@ from .serializers import (
 )
 
 
+class IsAdmin(permissions.BasePermission):
+    message = 'Seul un administrateur peut modifier les produits.'
+
+    def has_permission(self, request, view):
+        return bool(
+            request.user
+            and request.user.is_authenticated
+            and request.user.role == 'admin'
+        )
+
+
 class CategoryListCreateView(generics.ListCreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -29,12 +40,18 @@ class ProductListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
+    def get_permissions(self):
+        return [IsAdmin()] if self.request.method == 'POST' else [permissions.IsAuthenticatedOrReadOnly()]
+
 
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.select_related('category').all()
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def get_permissions(self):
+        return [IsAdmin()] if self.request.method in ('PUT', 'PATCH', 'DELETE') else [permissions.IsAuthenticatedOrReadOnly()]
 
 
 class StockListCreateView(generics.ListCreateAPIView):

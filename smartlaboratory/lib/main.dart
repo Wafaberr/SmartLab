@@ -6,16 +6,22 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smartlaboratory/core/router/app_router.dart';
 import 'package:smartlaboratory/core/localization/app_locale.dart';
+import 'package:smartlaboratory/core/theme/app_theme.dart';
+import 'package:smartlaboratory/core/theme/theme_controller.dart';
 
 import 'package:smartlaboratory/features/auth/data/repository/auth_repository_impl.dart';
 import 'package:smartlaboratory/features/auth/data/repository/password_reset_repository_impl.dart';
 import 'package:smartlaboratory/features/auth/domain/repository/auth_repository.dart';
 import 'package:smartlaboratory/features/auth/domain/repository/password_reset_repository.dart';
 import 'package:smartlaboratory/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:smartlaboratory/features/auth/presentation/cubit/user_cubit.dart';
+import 'package:smartlaboratory/features/auth/data/data_source/user_remote_datasource.dart';
 import 'package:smartlaboratory/features/auth/presentation/cubit_2/password_reset_cubit.dart';
 import 'package:smartlaboratory/features/products/data/repository/product_repository_impl.dart';
 import 'package:smartlaboratory/features/products/domain/repository/product_repository.dart';
 import 'package:smartlaboratory/features/products/presentation/cubit/product_cubit.dart';
+import 'package:smartlaboratory/features/laboratory/data/repository/laboratory_repository.dart';
+import 'package:smartlaboratory/features/laboratory/presentation/cubit/laboratory_cubit.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,6 +44,7 @@ Future<void> main() async {
         BlocProvider(
           create: (context) => AuthCubit(authRepository)..checkAuth(),
         ),
+        BlocProvider(create: (_) => UserCubit(UserRemoteDatasource())),
         BlocProvider(
           create: (context) => PasswordResetCubit(
             authRepository,
@@ -45,6 +52,9 @@ Future<void> main() async {
           ),
         ),
         BlocProvider(create: (context) => ProductCubit(productRepository)),
+        BlocProvider(
+          create: (context) => LaboratoryCubit(LaboratoryRepository()),
+        ),
       ],
       child: MyApp(initialUri: initialUri),
     ),
@@ -62,6 +72,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final _localeController = AppLocaleController();
+  final _themeController = ThemeController();
   late final GoRouter _router;
   final AppLinks _appLinks = AppLinks();
   StreamSubscription<Uri>? _linkSubscription;
@@ -71,6 +82,8 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     _localeController.addListener(_onLocaleChanged);
     _localeController.load();
+    _themeController.addListener(_onThemeChanged);
+    _themeController.load();
     _router = AppRouter.createRoute(
       context.read<AuthCubit>(),
       initialLocation: _initialLocation,
@@ -137,6 +150,8 @@ class _MyAppState extends State<MyApp> {
   void dispose() {
     _localeController.removeListener(_onLocaleChanged);
     _localeController.dispose();
+    _themeController.removeListener(_onThemeChanged);
+    _themeController.dispose();
     _linkSubscription?.cancel();
     _router.dispose();
     super.dispose();
@@ -144,17 +159,26 @@ class _MyAppState extends State<MyApp> {
 
   void _onLocaleChanged() => setState(() {});
 
+  void _onThemeChanged() => setState(() {});
+
   @override
   Widget build(BuildContext context) {
     return AppLocaleScope(
       notifier: _localeController,
-      child: MaterialApp.router(
-        title: _localeController.text('appName'),
-        locale: _localeController.locale,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+      child: ThemeScope(
+        notifier: _themeController,
+        child: AnimatedBuilder(
+          animation: _themeController,
+          builder: (context, child) => MaterialApp.router(
+            debugShowCheckedModeBanner: false,
+            title: _localeController.text('appName'),
+            locale: _localeController.locale,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: _themeController.themeMode,
+            routerConfig: _router,
+          ),
         ),
-        routerConfig: _router,
       ),
     );
   }

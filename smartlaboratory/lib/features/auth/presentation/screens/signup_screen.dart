@@ -1,9 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:smartlaboratory/core/utils/validators.dart';
+import 'package:smartlaboratory/core/utils/image_picker.dart';
+import 'package:smartlaboratory/core/widgets/validators.dart';
 import 'package:smartlaboratory/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:smartlaboratory/features/auth/presentation/widgets/custom_text_field.dart';
+import 'package:smartlaboratory/features/auth/presentation/widgets/auth_background.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -17,6 +21,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final userNameController = TextEditingController();
+  File? selectedImage;
   @override
   void dispose() {
     emailController.dispose();
@@ -33,6 +38,15 @@ class _SignupScreenState extends State<SignupScreen> {
         duration: Duration(seconds: 3),
       ),
     );
+  }
+
+  Future<void> _pickImage() async {
+    final image = await AppImagePicker.pickImage(context);
+    if (image == null || !mounted) return;
+
+    setState(() {
+      selectedImage = image;
+    });
   }
 
   @override
@@ -52,15 +66,7 @@ class _SignupScreenState extends State<SignupScreen> {
           }
         },
         builder: (context, state) {
-          return Container(
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xffE8FFE5), Colors.white, Color(0xffFFF9D8)],
-              ),
-            ),
+          return AuthBackground(
             child: SafeArea(
               child: Form(
                 key: _formKey,
@@ -68,17 +74,29 @@ class _SignupScreenState extends State<SignupScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 25),
                   child: Column(
                     children: [
-                      const SizedBox(height: 150),
+                      const SizedBox(height: 32),
 
-                      const Text(
-                        "Welcome ",
-                        style: TextStyle(
-                          fontSize: 34,
-                          fontWeight: FontWeight.bold,
+                      Text(
+                        "Ajouter un utilisateur",
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      GestureDetector(
+                        onTap: _pickImage,
+                        child: CircleAvatar(
+                          radius: 46,
+                          backgroundImage: selectedImage == null
+                              ? null
+                              : FileImage(selectedImage!),
+                          child: selectedImage == null
+                              ? const Icon(Icons.add_a_photo_outlined, size: 32)
+                              : null,
                         ),
                       ),
 
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 20),
 
                       CustomTextField(
                         label: 'User name',
@@ -107,18 +125,18 @@ class _SignupScreenState extends State<SignupScreen> {
                         obscureText: true,
                         prefixIcon: const Icon(Icons.lock_outline),
                       ),
-                      const SizedBox(height: 10),
-
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
 
                       SizedBox(
                         width: double.infinity,
                         height: 58,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xff43F15C),
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.primary,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
+                              borderRadius: BorderRadius.circular(14),
                             ),
                           ),
                           onPressed: state is AuthLoading
@@ -131,12 +149,17 @@ class _SignupScreenState extends State<SignupScreen> {
                                       userNameController.text.trim(),
                                       emailController.text.trim(),
                                       passwordController.text.trim(),
+                                      imageFile: selectedImage,
                                     );
                                   }
                                 },
                           child: const Text(
-                            "Sign up",
-                            style: TextStyle(fontSize: 18, color: Colors.black),
+                            "Créer l'utilisateur",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ),
@@ -146,20 +169,20 @@ class _SignupScreenState extends State<SignupScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text("have you already an account? "),
+                          const Text("Retour à la connexion : "),
                           GestureDetector(
                             onTap: () {
                               context.go('/login');
                             },
                             child: const Text(
-                              "Login",
+                              "Connexion",
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                           ),
                         ],
                       ),
 
-                      const SizedBox(height: 120),
+                      const SizedBox(height: 40),
 
                       const Text(
                         "By continuing to use CookShelf, you agree to our",

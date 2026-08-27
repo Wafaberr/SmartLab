@@ -1,13 +1,22 @@
 from rest_framework import serializers
 
-from .models import AnalysisType, LabSession, SessionConsumption
-from .models import AnalysisType, LabSession, SessionConsumption, SessionLoss
+from .models import AnalysisRecipe, AnalysisType, LabSession, SessionConsumption, SessionLoss
 
 
 class AnalysisTypeSerializer(serializers.ModelSerializer):
+    recipes = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+
     class Meta:
         model = AnalysisType
-        fields = '__all__'
+        fields = ('id', 'name', 'duration_minutes', 'price', 'is_active', 'recipes')
+
+
+class AnalysisRecipeSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.name', read_only=True)
+
+    class Meta:
+        model = AnalysisRecipe
+        fields = ('id', 'analysis_type', 'product', 'product_name', 'quantity_per_sample', 'unit')
 
 
 class SessionConsumptionSerializer(serializers.ModelSerializer):

@@ -3,7 +3,7 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 
 from apps.inventory.models import Product, StockMovement
-from .models import AnalysisType, LabSession
+from .models import AnalysisRecipe, AnalysisType, LabSession, SessionConsumption
 
 
 class LaboratoryApiTests(TestCase):
@@ -26,6 +26,28 @@ class LaboratoryApiTests(TestCase):
 
 		self.assertEqual(response.status_code, 201)
 		self.assertEqual(LabSession.objects.get().technician, self.user)
+
+	def test_create_session_creates_planned_consumption_from_recipe(self):
+		product = Product.objects.create(
+			name='Tube EDTA', reference='EDTA-RECIPE-001', unit='piece'
+		)
+		AnalysisRecipe.objects.create(
+			analysis_type=self.analysis_type,
+			product=product,
+			quantity_per_sample=2,
+			unit='piece',
+		)
+
+		response = self.client.post(
+			'/laboratory/sessions/',
+			{'analysis_type': self.analysis_type.id, 'sample_count': 20},
+			format='json',
+		)
+
+		self.assertEqual(response.status_code, 201)
+		consumption = SessionConsumption.objects.get()
+		self.assertEqual(consumption.planned_quantity, 40)
+		self.assertEqual(consumption.actual_quantity, 0)
 
 	def test_validate_session_consumes_stock(self):
 		product = Product.objects.create(

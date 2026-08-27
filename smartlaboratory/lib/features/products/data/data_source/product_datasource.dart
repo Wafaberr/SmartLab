@@ -17,15 +17,23 @@ class ProductDatasource {
       _logger.info('Fetched products: ${response.statusCode}');
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = response.data as List<dynamic>;
+        final responseData = response.data;
+        final List<dynamic> data = responseData is List
+            ? responseData
+            : responseData is Map && responseData['results'] is List
+            ? responseData['results'] as List<dynamic>
+            : <dynamic>[];
         return data
-            .map((p) => ProductModel.fromJson(p as Map<String, dynamic>))
+            .map(
+              (p) => ProductModel.fromJson(Map<String, dynamic>.from(p as Map)),
+            )
             .toList();
       }
       throw 'Error fetching products';
     } on DioException catch (e) {
       final message = e.response?.data is Map
           ? e.response!.data['error']?.toString() ??
+                e.response!.data['detail']?.toString() ??
                 e.message ??
                 'Failed to fetch products'
           : e.message ?? 'Failed to fetch products';
@@ -233,7 +241,9 @@ class ProductDatasource {
   Future<List<StockMovementModel>> getMovements(int productId) async {
     final response = await _dio.get(Endpoints.productMovements(productId));
     return (response.data as List<dynamic>)
-        .map((item) => StockMovementModel.fromJson(item as Map<String, dynamic>))
+        .map(
+          (item) => StockMovementModel.fromJson(item as Map<String, dynamic>),
+        )
         .toList();
   }
 }

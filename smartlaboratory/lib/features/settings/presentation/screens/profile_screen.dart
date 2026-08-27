@@ -13,7 +13,7 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Mon profil'), centerTitle: true),
+      appBar: AppBar(title: const Text('Mon profil')),
       body: BlocBuilder<AuthCubit, AuthState>(
         builder: (context, state) {
           // ==============================
@@ -30,7 +30,7 @@ class ProfileScreen extends StatelessWidget {
             final User user = state.user;
 
             return SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
               child: Column(
                 children: [
                   // ==============================
@@ -47,7 +47,7 @@ class ProfileScreen extends StatelessWidget {
                     user.fullName,
                     style: const TextStyle(
                       fontSize: 24,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w800,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -65,7 +65,7 @@ class ProfileScreen extends StatelessWidget {
                   // ==============================
                   // ROLE
                   // ==============================
-                  _buildRoleBadge(user),
+                  _buildRoleBadge(user, context),
 
                   const SizedBox(height: 30),
 
@@ -121,6 +121,7 @@ class ProfileScreen extends StatelessWidget {
 
                   // MODIFIER PROFIL
                   _buildActionTile(
+                    context: context,
                     icon: Icons.edit_outlined,
                     title: 'Modifier mon profil',
                     onTap: () {
@@ -135,6 +136,7 @@ class ProfileScreen extends StatelessWidget {
 
                   // CHANGER MOT DE PASSE
                   _buildActionTile(
+                    context: context,
                     icon: Icons.lock_outline,
                     title: 'Changer le mot de passe',
                     onTap: () {
@@ -151,6 +153,7 @@ class ProfileScreen extends StatelessWidget {
 
                   // DECONNEXION
                   _buildActionTile(
+                    context: context,
                     icon: Icons.logout,
                     title: 'Se déconnecter',
                     iconColor: Colors.red,
@@ -248,14 +251,19 @@ class ProfileScreen extends StatelessWidget {
   // ROLE BADGE
   // ============================================================
 
-  Widget _buildRoleBadge(User user) {
+  Widget _buildRoleBadge(User user, BuildContext context) {
     final isAdmin = user.isAdmin;
+    final colorScheme = Theme.of(context).colorScheme;
+    final bgColor = isAdmin
+        ? colorScheme.primaryContainer
+        : colorScheme.secondaryContainer;
+    final fgColor = isAdmin ? colorScheme.primary : colorScheme.secondary;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: isAdmin ? Colors.deepPurple.shade50 : Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(30),
+        color: bgColor,
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -265,15 +273,12 @@ class ProfileScreen extends StatelessWidget {
                 ? Icons.admin_panel_settings_outlined
                 : Icons.science_outlined,
             size: 18,
-            color: isAdmin ? Colors.deepPurple : Colors.blue,
+            color: fgColor,
           ),
           const SizedBox(width: 8),
           Text(
             isAdmin ? 'Administrateur' : 'Technicien',
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              color: isAdmin ? Colors.deepPurple : Colors.blue,
-            ),
+            style: TextStyle(fontWeight: FontWeight.w600, color: fgColor),
           ),
         ],
       ),
@@ -289,7 +294,7 @@ class ProfileScreen extends StatelessWidget {
       alignment: Alignment.centerLeft,
       child: Text(
         title,
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
       ),
     );
   }
@@ -327,6 +332,7 @@ class ProfileScreen extends StatelessWidget {
   // ============================================================
 
   Widget _buildActionTile({
+    required BuildContext context,
     required IconData icon,
     required String title,
     required VoidCallback onTap,
@@ -341,7 +347,10 @@ class ProfileScreen extends StatelessWidget {
           title,
           style: TextStyle(color: textColor, fontWeight: FontWeight.w500),
         ),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        trailing: Icon(
+          Icons.chevron_right,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
         onTap: onTap,
       ),
     );
