@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smartlaboratory/features/auth/presentation/cubit/auth_cubit.dart';
-import 'package:smartlaboratory/features/products/presentation/screens/add_product_screen.dart';
-import 'package:smartlaboratory/features/products/presentation/screens/products_list_screen.dart';
-import 'package:smartlaboratory/features/auth/presentation/screens/users_management_screen.dart';
 
 class HomeMainScreen extends StatelessWidget {
   const HomeMainScreen({super.key});

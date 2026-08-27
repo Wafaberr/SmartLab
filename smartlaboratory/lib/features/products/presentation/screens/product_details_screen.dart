@@ -4,11 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import 'package:smartlaboratory/core/widgets/app_button.dart';
 import 'package:smartlaboratory/core/widgets/status_badge.dart';
-import 'package:smartlaboratory/core/widgets/stock_card.dart';
 import 'package:smartlaboratory/features/products/presentation/cubit/product_cubit.dart';
 import 'package:smartlaboratory/features/products/presentation/widget/product_image.dart';
 import 'package:smartlaboratory/features/products/presentation/screens/stock_history_screen.dart';
-import 'package:smartlaboratory/features/products/presentation/screens/update_product_screen.dart';
 import 'package:smartlaboratory/features/products/presentation/widget/stock_mouvement_widget.dart';
 import 'package:smartlaboratory/features/auth/presentation/cubit/auth_cubit.dart';
 
@@ -26,7 +24,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   void initState() {
     super.initState();
 
-    // On récupère le Cubit qui se trouve déjà dans le main.dart
     context.read<ProductCubit>().getProduct(widget.productId);
   }
 
@@ -46,17 +43,9 @@ class ProductDetail extends StatelessWidget {
 
       body: BlocBuilder<ProductCubit, ProductState>(
         builder: (context, state) {
-          // ==========================
-          // LOADING
-          // ==========================
-
           if (state is ProductLoading) {
             return const Center(child: CircularProgressIndicator());
           }
-
-          // ==========================
-          // PRODUCT LOADED
-          // ==========================
 
           if (state is ProductDetailLoaded) {
             final product = state.product;
@@ -156,9 +145,6 @@ class ProductDetail extends StatelessWidget {
 
                   const SizedBox(height: 20),
 
-                  // ==========================
-                  // INFORMATIONS
-                  // ==========================
                   Card(
                     elevation: 2,
                     child: Padding(
@@ -204,13 +190,6 @@ class ProductDetail extends StatelessWidget {
                             'Expiration',
                             product.expirationDate ?? 'Non définie',
                           ),
-
-                          // _infoRow(
-                          //   'Emplacement',
-                          //   product.location.isEmpty
-                          //       ? 'Non défini'
-                          //       : product.location,
-                          // ),
                         ],
                       ),
                     ),
@@ -218,9 +197,6 @@ class ProductDetail extends StatelessWidget {
 
                   const SizedBox(height: 24),
 
-                  // ==========================
-                  // DESCRIPTION
-                  // ==========================
                   const Text(
                     'Description',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -237,7 +213,6 @@ class ProductDetail extends StatelessWidget {
 
                   const SizedBox(height: 30),
 
-                  // if (isAdmin)
                   Row(
                     children: [
                       Expanded(
@@ -284,10 +259,6 @@ class ProductDetail extends StatelessWidget {
             );
           }
 
-          // ==========================
-          // ERROR
-          // ==========================
-
           if (state is ProductError) {
             return Center(
               child: Padding(
@@ -309,11 +280,6 @@ class ProductDetail extends StatelessWidget {
 
                     ElevatedButton.icon(
                       onPressed: () {
-                        // Récupération de l'ID depuis
-                        // le screen parent impossible ici.
-                        //
-                        // On utilise le Navigator pour
-                        // relancer la page.
                         Navigator.pop(context);
                       },
                       icon: const Icon(Icons.arrow_back),
@@ -325,19 +291,11 @@ class ProductDetail extends StatelessWidget {
             );
           }
 
-          // ==========================
-          // DEFAULT
-          // ==========================
-
           return const Center(child: Text('Aucun produit trouvé'));
         },
       ),
     );
   }
-
-  // ==========================
-  // INFO ROW
-  // ==========================
 
   Widget _infoRow(BuildContext context, String title, String value) {
     return Padding(
