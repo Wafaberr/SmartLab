@@ -473,6 +473,133 @@ implémentés :
 Les tokens sont des JWT fournis par Django REST Framework Simple JWT. Le token
 d'accès expire après 60 minutes et le token de rafraîchissement après 1 jour.
 
+## Assistant IA - Gestion du Stock
+
+### `GET /ai/analyses/`
+
+Liste toutes les analyses IA du stock. Authentification requise.
+
+Paramètres de filtrage :
+- `priority` : critical, high, medium, low
+- `analysis_type` : low_stock, expiring, expired, overstock, trend
+- `is_resolved` : true/false
+- `product` : ID du produit
+
+Réponse `200 OK` :
+
+```json
+{
+  "count": 5,
+  "results": [
+    {
+      "id": 1,
+      "product": 1,
+      "product_name": "Microcontrôleur Arduino",
+      "product_reference": "ARD-001",
+      "analysis_type": "low_stock",
+      "priority": "high",
+      "current_stock": 5,
+      "minimum_stock": 10,
+      "daily_consumption": 2.5,
+      "estimated_days_remaining": 2,
+      "recommendation": "Le stock est bas. Acheter 50 unités.",
+      "recommended_quantity": 50,
+      "is_resolved": false,
+      "created_at": "2026-08-19T10:00:00Z",
+      "updated_at": "2026-08-19T10:00:00Z"
+    }
+  ]
+}
+```
+
+### `POST /ai/analyses/run_analysis/`
+
+Lance l'analyse IA complète sur tous les produits. Seuls les admins peuvent accéder.
+
+Corps JSON (optionnel) :
+
+```json
+{
+  "days_lookback": 30
+}
+```
+
+Réponse `200 OK` :
+
+```json
+{
+  "success": true,
+  "message": "Analyse complétée",
+  "summary": {
+    "critical_alerts": 2,
+    "high_alerts": 5,
+    "timestamp": "2026-08-19T10:30:00Z"
+  }
+}
+```
+
+### `GET /ai/analyses/critical_only/`
+
+Retourne uniquement les alertes critiques. Authentification requise.
+
+Réponse `200 OK` :
+
+```json
+{
+  "count": 2,
+  "results": [...]
+}
+```
+
+### `POST /ai/analyses/{id}/mark_resolved/`
+
+Marque une analyse comme résolue.
+
+Réponse `200 OK` :
+
+```json
+{
+  "success": true,
+  "message": "Alerte marquée comme résolue",
+  "analysis": {...}
+}
+```
+
+### `POST /ai/analyses/resolve_all/`
+
+Marque toutes les analyses d'un type comme résolues. Seuls les admins.
+
+Corps JSON :
+
+```json
+{
+  "analysis_type": "low_stock"
+}
+```
+
+Réponse `200 OK` :
+
+```json
+{
+  "success": true,
+  "message": "5 analyses marquées comme résolues"
+}
+```
+
+### `GET /ai/insights/`
+
+Liste toutes les insights système. Authentification requise.
+
+Paramètres de filtrage :
+- `insight_type` : stock_forecast, cost_optimization, seasonal_trend, supplier_performance
+- `is_active` : true/false
+
+### Lancer l'analyse manuellement
+
+```powershell
+python manage.py analyze_stock --days=30
+```
+
 ## Configuration serveur
 
 Configurez les secrets par variables d'environnement, notamment
@@ -485,5 +612,5 @@ Pour exécuter les tests explicitement :
 
 ```powershell
 python manage.py check
-python manage.py test apps.auth.tests apps.inventory.tests apps.laboratory.tests apps.orders.tests apps.notifications.tests
+python manage.py test apps.auth.tests apps.inventory.tests apps.laboratory.tests apps.orders.tests apps.notifications.tests apps.ai.tests
 ```

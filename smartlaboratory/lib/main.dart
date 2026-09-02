@@ -22,6 +22,13 @@ import 'package:smartlaboratory/features/products/domain/repository/product_repo
 import 'package:smartlaboratory/features/products/presentation/cubit/product_cubit.dart';
 import 'package:smartlaboratory/features/laboratory/data/repository/laboratory_repository.dart';
 import 'package:smartlaboratory/features/laboratory/presentation/cubit/laboratory_cubit.dart';
+import 'package:smartlaboratory/features/alerts/data/repository/notifications_repository.dart';
+import 'package:smartlaboratory/features/alerts/presentation/cubit/notifications_cubit.dart';
+import 'package:smartlaboratory/features/alerts/data/repository/ai_recommendations_repository.dart';
+import 'package:smartlaboratory/features/alerts/presentation/cubit/ai_recommendations_cubit.dart';
+import 'package:smartlaboratory/features/alerts/presentation/cubit/alerts_cubit.dart';
+import 'package:smartlaboratory/features/orders/data/repositories/order_repository.dart';
+import 'package:smartlaboratory/features/orders/presentation/cubit/order_cubit.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,6 +45,9 @@ Future<void> main() async {
   PasswordResetRepository passwordResetRepository =
       PasswordResetRepositoryImpl();
   ProductRepository productRepository = ProductRepositoryImpl();
+  NotificationsRepository notificationsRepository = NotificationsRepository();
+  AIRecommendationsRepository aiRecommendationsRepository =
+      AIRecommendationsRepository();
   runApp(
     MultiBlocProvider(
       providers: [
@@ -54,6 +64,20 @@ Future<void> main() async {
         BlocProvider(create: (context) => ProductCubit(productRepository)),
         BlocProvider(
           create: (context) => LaboratoryCubit(LaboratoryRepository()),
+        ),
+        BlocProvider(
+          create: (context) => NotificationsCubit(notificationsRepository),
+        ),
+        BlocProvider(
+          create: (context) =>
+              AIRecommendationsCubit(aiRecommendationsRepository),
+        ),
+        BlocProvider(
+          create: (context) =>
+              AlertsCubit(repository: aiRecommendationsRepository),
+        ),
+        BlocProvider(
+          create: (context) => OrderCubit(orderRepository: OrderRepository()),
         ),
       ],
       child: MyApp(initialUri: initialUri),

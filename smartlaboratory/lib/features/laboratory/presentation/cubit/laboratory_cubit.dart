@@ -100,4 +100,46 @@ class LaboratoryCubit extends Cubit<LaboratoryState> {
       rethrow;
     }
   }
+
+  Future<void> getSessionDetail(int sessionId) async {
+    emit(LaboratoryLoading());
+    try {
+      final session = await repository.getSession(sessionId);
+      emit(LaboratorySessionDetailLoaded(session));
+    } catch (error) {
+      emit(LaboratoryError(message: error.toString()));
+    }
+  }
+
+  Future<void> recordConsumption(
+    int sessionId,
+    List<Map<String, dynamic>> consumptions,
+  ) async {
+    emit(LaboratorySaving());
+    try {
+      // TODO: Implement consumption recording endpoint
+      await Future.delayed(const Duration(milliseconds: 500));
+      emit(
+        LaboratorySessionDetailLoaded(await repository.getSession(sessionId)),
+      );
+    } catch (error) {
+      emit(LaboratoryError(message: error.toString()));
+    }
+  }
+
+  Future<void> recordLosses(
+    int sessionId,
+    List<Map<String, dynamic>> losses,
+  ) async {
+    emit(LaboratorySaving());
+    try {
+      // TODO: Implement losses recording endpoint
+      await Future.delayed(const Duration(milliseconds: 500));
+      emit(
+        LaboratorySessionDetailLoaded(await repository.getSession(sessionId)),
+      );
+    } catch (error) {
+      emit(LaboratoryError(message: error.toString()));
+    }
+  }
 }

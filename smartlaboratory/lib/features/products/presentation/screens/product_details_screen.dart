@@ -8,7 +8,6 @@ import 'package:smartlaboratory/features/products/presentation/cubit/product_cub
 import 'package:smartlaboratory/features/products/presentation/widget/product_image.dart';
 import 'package:smartlaboratory/features/products/presentation/screens/stock_history_screen.dart';
 import 'package:smartlaboratory/features/products/presentation/widget/stock_mouvement_widget.dart';
-import 'package:smartlaboratory/features/auth/presentation/cubit/auth_cubit.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
   final int productId;
@@ -43,18 +42,16 @@ class ProductDetail extends StatelessWidget {
 
       body: BlocBuilder<ProductCubit, ProductState>(
         builder: (context, state) {
-          if (state is ProductLoading) {
+          if (state is ProductDetailLoading || state is ProductLoading) {
+            if (state is ProductDetailLoading && state.products != null) {
+              return const Center(child: CircularProgressIndicator());
+            }
             return const Center(child: CircularProgressIndicator());
           }
 
           if (state is ProductDetailLoaded) {
             final product = state.product;
             final colorScheme = Theme.of(context).colorScheme;
-            final isAdmin =
-                context.read<AuthCubit>().state is Authentificated &&
-                (context.read<AuthCubit>().state as Authentificated)
-                    .user
-                    .isAdmin;
 
             return SingleChildScrollView(
               padding: const EdgeInsets.all(16),

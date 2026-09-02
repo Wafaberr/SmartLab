@@ -16,17 +16,10 @@ void showStockMovementSheet({
     builder: (sheetContext) {
       return Container(
         width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(
-          20,
-          12,
-          20,
-          30,
-        ),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 30),
         decoration: BoxDecoration(
           color: colors.surface,
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(28),
-          ),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -35,7 +28,6 @@ void showStockMovementSheet({
             // =========================
             // HANDLE
             // =========================
-
             Center(
               child: Container(
                 width: 45,
@@ -52,27 +44,20 @@ void showStockMovementSheet({
             // =========================
             // TITLE
             // =========================
-
             Text(
               'Mouvement de stock',
-              style: Theme.of(sheetContext)
-                  .textTheme
-                  .titleLarge
-                  ?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                sheetContext,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 6),
 
             Text(
               'Choisissez le type de mouvement',
-              style: Theme.of(sheetContext)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(
-                    color: colors.onSurfaceVariant,
-                  ),
+              style: Theme.of(
+                sheetContext,
+              ).textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
             ),
 
             const SizedBox(height: 20),
@@ -80,7 +65,6 @@ void showStockMovementSheet({
             // =========================
             // ENTRÉE
             // =========================
-
             _stockMovementCard(
               context: sheetContext,
               icon: Icons.south_west_rounded,
@@ -98,7 +82,6 @@ void showStockMovementSheet({
             // =========================
             // SORTIE
             // =========================
-
             _stockMovementCard(
               context: sheetContext,
               icon: Icons.north_east_rounded,
@@ -133,11 +116,9 @@ Widget _stockMovementCard({
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: color.withOpacity(0.25),
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Row(
         children: [
@@ -146,14 +127,10 @@ Widget _stockMovementCard({
             width: 52,
             height: 52,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
+              color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(15),
             ),
-            child: Icon(
-              icon,
-              color: color,
-              size: 27,
-            ),
+            child: Icon(icon, color: color, size: 27),
           ),
 
           const SizedBox(width: 15),
@@ -161,8 +138,7 @@ Widget _stockMovementCard({
           // TEXT
           Expanded(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
@@ -177,9 +153,7 @@ Widget _stockMovementCard({
                 Text(
                   description,
                   style: TextStyle(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurfaceVariant,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 13,
                   ),
                 ),
@@ -187,10 +161,7 @@ Widget _stockMovementCard({
             ),
           ),
 
-          Icon(
-            Icons.chevron_right_rounded,
-            color: color,
-          ),
+          Icon(Icons.chevron_right_rounded, color: color),
         ],
       ),
     ),

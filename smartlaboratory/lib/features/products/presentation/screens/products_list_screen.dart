@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:smartlaboratory/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:smartlaboratory/features/products/data/models/product_model.dart';
 import 'package:smartlaboratory/features/products/presentation/cubit/product_cubit.dart';
 import 'package:smartlaboratory/features/products/presentation/screens/product_details_screen.dart';
 import 'package:smartlaboratory/features/products/presentation/screens/update_product_screen.dart';
@@ -19,7 +20,11 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<ProductCubit>().getProducts();
+    final productCubit = context.read<ProductCubit>();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      productCubit.getProducts();
+    });
   }
 
   @override
@@ -82,11 +87,26 @@ class _ProductsListViewState extends State<ProductsListView> {
 
     return BlocBuilder<ProductCubit, ProductState>(
       builder: (context, state) {
+        final List<ProductModel> products;
+
+        if (state is ProductLoaded) {
+          products = state.products;
+        } else if (state is ProductDetailLoading) {
+          products = state.products ?? const <ProductModel>[];
+        } else if (state is ProductLoading) {
+          products = state.products ?? const <ProductModel>[];
+        } else if (state is ProductDetailLoaded) {
+          products = state.products ?? const <ProductModel>[];
+        } else {
+          products = const <ProductModel>[];
+        }
+
         // ========================================================
         // LOADING
         // ========================================================
 
-        if (state is ProductLoading) {
+        if (state is ProductInitial ||
+            (state is ProductLoading && products.isEmpty)) {
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -94,8 +114,11 @@ class _ProductsListViewState extends State<ProductsListView> {
         // LOADED
         // ========================================================
 
-        if (state is ProductLoaded) {
-          final products = _filterProducts(state.products);
+        if (products.isNotEmpty ||
+            state is ProductLoaded ||
+            state is ProductDetailLoading ||
+            state is ProductDetailLoaded) {
+          final filteredProducts = _filterProducts(products);
 
           return Column(
             children: [
@@ -184,8 +207,8 @@ class _ProductsListViewState extends State<ProductsListView> {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     _searchQuery.isEmpty
-                        ? '${products.length} produits'
-                        : '${products.length} résultat(s)',
+                        ? '${filteredProducts.length} produits'
+                        : '${filteredProducts.length} résultat(s)',
                     style: TextStyle(
                       color: colors.onSurfaceVariant,
                       fontWeight: FontWeight.w500,
@@ -202,7 +225,7 @@ class _ProductsListViewState extends State<ProductsListView> {
                   onRefresh: () async {
                     await context.read<ProductCubit>().getProducts();
                   },
-                  child: products.isEmpty
+                  child: filteredProducts.isEmpty
                       ? ListView(
                           physics: const AlwaysScrollableScrollPhysics(),
                           children: const [
@@ -230,12 +253,12 @@ class _ProductsListViewState extends State<ProductsListView> {
                         )
                       : ListView.separated(
                           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                          itemCount: products.length,
-                          separatorBuilder: (_, __) {
+                          itemCount: filteredProducts.length,
+                          separatorBuilder: (_, _) {
                             return const SizedBox(height: 10);
                           },
                           itemBuilder: (context, index) {
-                            final product = products[index];
+                            final product = filteredProducts[index];
 
                             // ====================================
                             // AUTH
@@ -358,9 +381,16 @@ class _ProductsListViewState extends State<ProductsListView> {
                                     ? PopupMenuButton<String>(
                                         icon: const Icon(Icons.more_vert),
                                         onSelected: (value) async {
+                                          final currentContext = context;
+                                          final productCubit = context
+                                              .read<ProductCubit>();
+
                                           if (value == 'edit') {
-                                            await Navigator.push(
-                                              context,
+                                            final navigator = Navigator.of(
+                                              currentContext,
+                                            );
+
+                                            await navigator.push(
                                               MaterialPageRoute(
                                                 builder: (_) => UpdateProductScreen(
                                                   product: product,
@@ -371,15 +401,19 @@ class _ProductsListViewState extends State<ProductsListView> {
                                               ),
                                             );
 
-                                            if (!context.mounted) return;
+                                            if (!currentContext.mounted) return;
 
-                                            await context
-                                                .read<ProductCubit>()
-                                                .getProducts();
+                                            await productCubit.getProducts();
                                           }
 
                                           if (value == 'delete') {
-                                            _showDeleteDialog(context, product);
+                                            final dialogContext =
+                                                currentContext;
+                                            _showDeleteDialog(
+                                              // ignore: use_build_context_synchronously
+                                              dialogContext,
+                                              product,
+                                            );
                                           }
                                         },
                                         itemBuilder: (context) => [
@@ -423,8 +457,11 @@ class _ProductsListViewState extends State<ProductsListView> {
                                 // OPEN DETAILS
                                 // ==================================
                                 onTap: () async {
-                                  await Navigator.push(
-                                    context,
+                                  final productCubit = context
+                                      .read<ProductCubit>();
+                                  final navigator = Navigator.of(context);
+
+                                  await navigator.push(
                                     MaterialPageRoute(
                                       builder: (_) => ProductDetailsScreen(
                                         productId: product.id,
@@ -447,9 +484,7 @@ class _ProductsListViewState extends State<ProductsListView> {
 
                                   if (!context.mounted) return;
 
-                                  await context
-                                      .read<ProductCubit>()
-                                      .getProducts();
+                                  await productCubit.getProducts();
                                 },
                               ),
                             );
@@ -514,6 +549,9 @@ class _ProductsListViewState extends State<ProductsListView> {
   // ============================================================
 
   void _showDeleteDialog(BuildContext context, dynamic product) {
+    final productCubit = context.read<ProductCubit>();
+    final errorColor = Theme.of(context).colorScheme.error;
+
     showDialog(
       context: context,
       builder: (dialogContext) {
@@ -530,18 +568,13 @@ class _ProductsListViewState extends State<ProductsListView> {
 
             TextButton(
               onPressed: () async {
-                final productCubit = context.read<ProductCubit>();
-
                 // Fermer le dialogue
                 Navigator.of(dialogContext).pop();
 
                 // Supprimer
                 await productCubit.deleteProduct(product);
               },
-              child: Text(
-                'Supprimer',
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
+              child: Text('Supprimer', style: TextStyle(color: errorColor)),
             ),
           ],
         );

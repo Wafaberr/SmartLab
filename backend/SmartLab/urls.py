@@ -29,6 +29,7 @@ urlpatterns = [
     path('laboratory/', include('apps.laboratory.urls')),
     path('orders/', include('apps.orders.urls')),
     path('notifications/', include('apps.notifications.urls')),
+    path('ai/', include('apps.ai.urls')),
     path(
         'openapi/',
         get_schema_view(

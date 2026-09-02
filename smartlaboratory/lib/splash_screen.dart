@@ -116,8 +116,15 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final primary = colorScheme.primary;
+    final secondary = colorScheme.secondary;
+    final primaryContainer = colorScheme.primaryContainer;
+    final onPrimary = colorScheme.onPrimary;
+    final surface = colorScheme.surface;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: surface,
       body: SafeArea(
         child: Center(
           child: Column(
@@ -132,32 +139,39 @@ class _SplashScreenState extends State<SplashScreen>
                     child: Transform.rotate(
                       angle: _rotationAnimation.value,
                       child: Container(
-                        width: 130,
-                        height: 130,
+                        width: 134,
+                        height: 134,
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
+                          gradient: LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: [
-                              Color(0xFF1A3A7A),
-                              Color(0xFF0F2B5C),
-                              Color(0xFF1A3A7A),
-                            ],
+                            colors: [primary, secondary, primaryContainer],
                           ),
-                          borderRadius: BorderRadius.circular(35),
+                          borderRadius: BorderRadius.circular(36),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.32),
+                            width: 1.5,
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF1A3A7A).withValues(alpha: 0.4),
-                              blurRadius: 30,
-                              spreadRadius: 5,
-                              offset: const Offset(0, 15),
+                              color: primary.withValues(alpha: 0.28),
+                              blurRadius: 28,
+                              spreadRadius: 2,
+                              offset: const Offset(0, 16),
+                            ),
+                            BoxShadow(
+                              color: secondary.withValues(alpha: 0.18),
+                              blurRadius: 40,
+                              offset: const Offset(0, 8),
                             ),
                           ],
                         ),
-                        child: const Icon(
-                          Icons.science,
-                          color: Colors.white,
-                          size: 65,
+                        child: Center(
+                          child: Icon(
+                            Icons.science_rounded,
+                            color: onPrimary,
+                            size: 68,
+                          ),
                         ),
                       ),
                     ),
@@ -172,12 +186,12 @@ class _SplashScreenState extends State<SplashScreen>
                 position: _slideAnimation,
                 child: FadeTransition(
                   opacity: _opacityAnimation,
-                  child: const Text(
+                  child: Text(
                     'SmartLab Stock AI',
                     style: TextStyle(
                       fontSize: 30,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF1A3A7A),
+                      color: primary,
                       letterSpacing: -0.5,
                     ),
                     textAlign: TextAlign.center,
@@ -210,7 +224,7 @@ class _SplashScreenState extends State<SplashScreen>
                     'Gestion intelligente du stock\n d’un laboratoire d’analyses médicales',
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.grey.shade600,
+                      color: colorScheme.onSurfaceVariant,
                       height: 1.5,
                     ),
                     textAlign: TextAlign.center,
@@ -240,7 +254,7 @@ class _SplashScreenState extends State<SplashScreen>
                             height: 45,
                             child: CircularProgressIndicator(
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                const Color(0xFF1A3A7A),
+                                primary,
                               ),
                               strokeWidth: 4,
                             ),
@@ -250,7 +264,7 @@ class _SplashScreenState extends State<SplashScreen>
                             'Chargement...',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.grey.shade500,
+                              color: colorScheme.onSurfaceVariant,
                               fontWeight: FontWeight.w400,
                               letterSpacing: 1,
                             ),
@@ -268,18 +282,15 @@ class _SplashScreenState extends State<SplashScreen>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _buildParticle(0.2, Colors.blue.shade100),
+                      _buildParticle(0.2, primary.withValues(alpha: 0.2)),
                       const SizedBox(width: 8),
-                      _buildParticle(0.4, Colors.blue.shade200),
+                      _buildParticle(0.4, primary.withValues(alpha: 0.35)),
                       const SizedBox(width: 8),
-                      _buildParticle(
-                        0.6,
-                        const Color(0xFF1A3A7A).withValues(alpha: 0.3),
-                      ),
+                      _buildParticle(0.6, primary.withValues(alpha: 0.6)),
                       const SizedBox(width: 8),
-                      _buildParticle(0.8, Colors.blue.shade200),
+                      _buildParticle(0.8, primary.withValues(alpha: 0.35)),
                       const SizedBox(width: 8),
-                      _buildParticle(1.0, Colors.blue.shade100),
+                      _buildParticle(1.0, primary.withValues(alpha: 0.2)),
                     ],
                   ),
                 ),

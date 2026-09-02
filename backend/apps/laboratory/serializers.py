@@ -4,11 +4,9 @@ from .models import AnalysisRecipe, AnalysisType, LabSession, SessionConsumption
 
 
 class AnalysisTypeSerializer(serializers.ModelSerializer):
-    recipes = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-
     class Meta:
         model = AnalysisType
-        fields = ('id', 'name', 'duration_minutes', 'price', 'is_active', 'recipes')
+        fields = ('id', 'name', 'duration_minutes', 'price')
 
 
 class AnalysisRecipeSerializer(serializers.ModelSerializer):

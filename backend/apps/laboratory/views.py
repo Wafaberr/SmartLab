@@ -114,24 +114,40 @@ class LabSessionValidateView(generics.UpdateAPIView):
 			return Response({'error': 'La session est déjà validée.'}, status=status.HTTP_400_BAD_REQUEST)
 		consumptions = request.data.get('consumptions', [])
 		losses = request.data.get('losses', [])
-		for item in consumptions:
-			self._apply_movement(session, item, 'Consommation de session')
-		for item in losses:
-			quantity = float(item.get('quantity', 0))
-			if quantity <= 0:
-				continue
-			loss = SessionLoss.objects.create(
-				session=session,
-				product_id=item['product_id'],
-				quantity=quantity,
-				reason=item.get('reason', 'other'),
-				comment=item.get('comment', ''),
-			)
-			self._apply_movement(session, item, 'Perte: ' + loss.get_reason_display())
+		try:
+			for item in consumptions:
+				self._apply_movement(session, item, 'Consommation de session')
+			for item in losses:
+				quantity = float(item.get('quantity', 0))
+				if quantity <= 0:
+					continue
+				loss = SessionLoss.objects.create(
+					session=session,
+					product_id=item['product_id'],
+					quantity=quantity,
+					reason=item.get('reason', 'other'),
+					comment=item.get('comment', ''),
+				)
+				self._apply_movement(session, item, 'Perte: ' + loss.get_reason_display())
+		except serializers.ValidationError as exc:
+			message = self._validation_error_to_message(exc)
+			return Response({'error': message}, status=status.HTTP_400_BAD_REQUEST)
 		session.status = 'completed'
 		session.completed_at = timezone.now()
 		session.save(update_fields=('status', 'completed_at', 'updated_at'))
 		return Response(self.get_serializer(session).data, status=status.HTTP_200_OK)
+
+	def _validation_error_to_message(self, exc):
+		detail = exc.detail
+		if isinstance(detail, dict):
+			for value in detail.values():
+				if isinstance(value, list) and value:
+					return str(value[0])
+				if isinstance(value, str) and value:
+					return value
+		if isinstance(detail, list) and detail:
+			return str(detail[0])
+		return str(detail)
 
 	def _apply_movement(self, session, item, reason):
 		product = Product.objects.select_for_update().get(pk=item['product_id'])

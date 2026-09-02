@@ -11,6 +11,7 @@ class Endpoints {
   static const String changePassword = 'auth/change-password/';
   static const String home = '/home';
   static const String products = 'inventory/products/';
+  static const String notifications = 'notifications/';
 
   static String productMovements(int productId) =>
       'inventory/products/$productId/movements/';

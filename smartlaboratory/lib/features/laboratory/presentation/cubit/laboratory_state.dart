@@ -33,6 +33,12 @@ final class SessionLoaded extends LaboratoryState {
   SessionLoaded({required this.session});
 }
 
+final class LaboratorySessionDetailLoaded extends LaboratoryState {
+  final LabSessionModel session;
+
+  LaboratorySessionDetailLoaded(this.session);
+}
+
 final class AnalysisTypesLoaded extends LaboratoryState {
   final List<AnalysisTypeModel> analysisTypes;
 

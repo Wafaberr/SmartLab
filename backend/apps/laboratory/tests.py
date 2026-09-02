@@ -67,3 +67,35 @@ class LaboratoryApiTests(TestCase):
 		product.refresh_from_db()
 		self.assertEqual(product.stock_quantity, 17)
 		self.assertEqual(StockMovement.objects.count(), 1)
+
+	def test_validate_session_returns_400_when_stock_is_insufficient(self):
+		product = Product.objects.create(
+			name='Tube EDTA', reference='EDTA-002', stock_quantity=2,
+		)
+		session = LabSession.objects.create(
+			analysis_type=self.analysis_type,
+			technician=self.user,
+			sample_count=2,
+		)
+		response = self.client.post(
+			f'/laboratory/sessions/{session.id}/validate/',
+			{'consumptions': [{'product_id': product.id, 'actual_quantity': 3}], 'losses': []},
+			format='json',
+		)
+		self.assertEqual(response.status_code, 400)
+		self.assertIn('Stock insuffisant', response.data.get('error', ''))
+		product.refresh_from_db()
+		self.assertEqual(product.stock_quantity, 2)
+
+	def test_get_analysis_types_returns_correct_fields(self):
+		response = self.client.get('/laboratory/analysis-types/')
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(len(response.data), 1)
+		analysis_type = response.data[0]
+		self.assertEqual(analysis_type['id'], self.analysis_type.id)
+		self.assertEqual(analysis_type['name'], 'Glycémie')
+		self.assertEqual(analysis_type['duration_minutes'], 5)
+		self.assertIn('price', analysis_type)
+		# recipes et is_active ne doivent pas être retournés
+		self.assertNotIn('recipes', analysis_type)
+		self.assertNotIn('is_active', analysis_type)

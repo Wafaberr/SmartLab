@@ -17,6 +17,12 @@ import 'package:smartlaboratory/features/laboratory/presentation/screens/analysi
 import 'package:smartlaboratory/features/laboratory/presentation/screens/new_analysis_session_screen.dart';
 import 'package:smartlaboratory/features/laboratory/presentation/screens/lab_sessions_screen.dart';
 import 'package:smartlaboratory/features/laboratory/presentation/screens/session_detail_screen.dart';
+import 'package:smartlaboratory/features/laboratory/presentation/screens/session_consumption_screen.dart';
+import 'package:smartlaboratory/features/laboratory/presentation/screens/session_losses_screen.dart';
+import 'package:smartlaboratory/features/alerts/presentation/screens/ia_forecast_screen.dart';
+import 'package:smartlaboratory/features/alerts/presentation/screens/reports_screen.dart';
+import 'package:smartlaboratory/features/orders/presentation/screens/orders_screen.dart';
+import 'package:smartlaboratory/features/orders/presentation/screens/new_order_screen.dart';
 import 'package:smartlaboratory/features/settings/presentation/screens/profile_screen.dart';
 import 'package:smartlaboratory/splash_screen.dart';
 
@@ -44,8 +50,14 @@ class AppRouter {
         builder: (context, state) => const UsersManagementScreen(),
       ),
       GoRoute(path: '/profile', builder: (context, state) => ProfileScreen()),
-      GoRoute(path: '/UsersManagementScreen', builder: (context, state) => UsersManagementScreen()),
-      GoRoute(path: '/addProduct', builder: (context, state) =>  AddProductScreen()),
+      GoRoute(
+        path: '/UsersManagementScreen',
+        builder: (context, state) => UsersManagementScreen(),
+      ),
+      GoRoute(
+        path: '/addProduct',
+        builder: (context, state) => AddProductScreen(),
+      ),
       GoRoute(
         path: '/session',
         builder: (context, state) => NewAnalysisSessionScreen(),
@@ -64,7 +76,9 @@ class AppRouter {
       ),
       GoRoute(
         path: '//stock/input/:productId',
-        builder: (context, state) => StockEntryScreen(productId: int.parse(state.pathParameters['productId']!),),
+        builder: (context, state) => StockEntryScreen(
+          productId: int.parse(state.pathParameters['productId']!),
+        ),
       ),
       GoRoute(
         path: '/analyses',
@@ -83,6 +97,34 @@ class AppRouter {
         builder: (context, state) => SessionDetailScreen(
           sessionId: int.parse(state.pathParameters['sessionId']!),
         ),
+      ),
+      GoRoute(
+        path: '/analyses/sessions/:sessionId/consumption',
+        builder: (context, state) => SessionConsumptionScreen(
+          sessionId: int.parse(state.pathParameters['sessionId']!),
+        ),
+      ),
+      GoRoute(
+        path: '/analyses/sessions/:sessionId/losses',
+        builder: (context, state) => SessionLossesScreen(
+          sessionId: int.parse(state.pathParameters['sessionId']!),
+        ),
+      ),
+      GoRoute(
+        path: '/ai/forecast',
+        builder: (context, state) => const IAForecastScreen(),
+      ),
+      GoRoute(
+        path: '/reports',
+        builder: (context, state) => const ReportsScreen(),
+      ),
+      GoRoute(
+        path: '/orders',
+        builder: (context, state) => const OrdersScreen(),
+      ),
+      GoRoute(
+        path: '/orders/new',
+        builder: (context, state) => const NewOrderScreen(),
       ),
       GoRoute(
         path: '/reset_pass',

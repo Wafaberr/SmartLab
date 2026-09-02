@@ -14,7 +14,14 @@ class ProductCubit extends Cubit<ProductState> {
   ProductCubit(this.productRepository) : super(ProductInitial());
 
   Future<void> getProducts() async {
-    emit(ProductLoading());
+    final currentProducts = switch (state) {
+      ProductLoaded(:final products) => products,
+      ProductDetailLoading(:final products) => products,
+      ProductLoading(:final products) => products,
+      _ => null,
+    };
+
+    emit(ProductLoading(products: currentProducts));
     try {
       final products = await productRepository.getProducts();
       emit(ProductLoaded(products: products));
@@ -24,10 +31,18 @@ class ProductCubit extends Cubit<ProductState> {
   }
 
   Future<void> getProduct(int id) async {
-    emit(ProductLoading());
+    final currentProducts = switch (state) {
+      ProductLoaded(:final products) => products,
+      ProductDetailLoading(:final products) => products,
+      ProductLoading(:final products) => products,
+      ProductDetailLoaded(:final products) => products,
+      _ => null,
+    };
+
+    emit(ProductDetailLoading(products: currentProducts));
     try {
       final product = await productRepository.getProduct(id);
-      emit(ProductDetailLoaded(product: product));
+      emit(ProductDetailLoaded(product: product, products: currentProducts));
     } catch (e) {
       emit(ProductError(message: e.toString()));
     }
