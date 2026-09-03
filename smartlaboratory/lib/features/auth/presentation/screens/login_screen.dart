@@ -165,22 +165,21 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       const SizedBox(height: 25),
 
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text("Don't have an account? "),
-                          GestureDetector(
-                            onTap: () {
-                              context.go('/signup');
-                            },
-                            child: const Text(
-                              "Sign Up",
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ],
-                      ),
-
+                      // Row(
+                      //   mainAxisAlignment: MainAxisAlignment.center,
+                      //   children: [
+                      //     const Text("Don't have an account? "),
+                      //     GestureDetector(
+                      //       onTap: () {
+                      //         context.go('/signup');
+                      //       },
+                      //       child: const Text(
+                      //         "Sign Up",
+                      //         style: TextStyle(fontWeight: FontWeight.bold),
+                      //       ),
+                      //     ),
+                      //   ],
+                      // ),
                       const SizedBox(height: 40),
 
                       const Text(
